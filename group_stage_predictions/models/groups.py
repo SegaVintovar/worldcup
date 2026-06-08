@@ -1,3 +1,5 @@
+# models.groups.py
+
 GROUP_A = {
     1: "mexico",
     2: "south-africa",

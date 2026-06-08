@@ -1,7 +1,14 @@
 import random
 from pathlib import Path
 
-BASE_CHARS = list("abcdefghijklmnopqrstuvwxyz_")
+from models.acronyms import COUNTRY_ACRONYMS
+
+ACRONYM_TO_COUNTRY = {
+    acronym: country
+    for country, acronym in COUNTRY_ACRONYMS.items()
+}
+
+BASE_CHARS = list("abcdefghijklmnopqrstuvwxyz_-")
 
 FILENAME_SEP = "_"
 
@@ -92,10 +99,8 @@ class Encryptor:
         with open(path, "r") as f:
             content = f.read().strip()
 
-        # Encrypt file contents (country names inside get encrypted, headers/positions stay plain)
         encrypted_content = self._encrypt_content(content, user_id)
 
-        # Encrypt the intra login (filename stem, no underscores in logins)
         enc_login = self.encrypt_text(path.stem, user_id)
 
         out_name = f"{user_id}{FILENAME_SEP}{enc_login}.txt"
@@ -108,46 +113,37 @@ class Encryptor:
         return out_path
 
     def decrypt_file(self, path: str, raw_dir: str = "decrypted_scores") -> Path:
-        """
-        Decrypt a single encrypted file and restore it to raw_dir.
-
-        Steps:
-          1. Split filename to get plaintext user_id and encrypted intra login.
-          2. Rebuild chardict from user_id.
-          3. Decrypt the intra login -> original filename.
-          4. Decrypt file contents.
-          5. Write restored file to raw_dir.
-        """
         path = Path(path)
         out_dir = Path(raw_dir)
         out_dir.mkdir(exist_ok=True)
 
-        name_without_ext = path.stem  # strips .txt
-        user_id_str, enc_login = name_without_ext.split(FILENAME_SEP, 1)
-        user_id = int(user_id_str)
+        # Extract user_id from filename prefix (plaintext)
+        user_id = int(path.name.split(FILENAME_SEP, 1)[0])
 
         with open(path, "r") as f:
-            encrypted_content = f.read().strip()
+            content = f.read().strip()
 
-        original_login = self.decrypt_text(enc_login, user_id)
-        decrypted_content = self._decrypt_content(encrypted_content, user_id)
+        decrypted_content = self._decrypt_content(content, user_id)
 
-        out_path = out_dir / f"{original_login}.txt"
+        # Decrypt the login from the filename to use as output filename
+        enc_login = path.stem.split(FILENAME_SEP, 1)[1]
+        login = self.decrypt_text(enc_login, user_id)
+
+        out_path = out_dir / f"{login}.txt"
 
         with open(out_path, "w") as f:
             f.write(decrypted_content)
 
-        path.unlink()
         return out_path
 
     # ------------------------------------------------------------------
-    # Content helpers (only encrypt country values, not headers/positions)
+    # Content helpers
     # ------------------------------------------------------------------
 
     def _encrypt_content(self, content: str, user_id: int) -> str:
         """
-        Encrypt only the country names in the file content.
-        Lines like 'GROUP_A:' and '1:mexico' -> '1:{encrypted_mexico}'
+        Encrypt only the country acronym values in the file content.
+        Lines like 'GROUP_A:' and '1:mex' -> '1:{encrypted_mex}'
         """
         lines = []
         for line in content.splitlines():
@@ -160,13 +156,18 @@ class Encryptor:
 
     def _decrypt_content(self, content: str, user_id: int) -> str:
         """
-        Decrypt only the country name values in the file content.
+        Decrypt acronym values then expand them to full country names.
+
+        encrypted  -> decrypt_text -> acronym -> ACRONYM_TO_COUNTRY -> full name
+        e.g. 'kfg' -> 'mex' -> 'mexico'
         """
         lines = []
         for line in content.splitlines():
             if ":" in line and not line.startswith("GROUP"):
                 prefix, value = line.split(":", 1)
-                lines.append(f"{prefix}:{self.decrypt_text(value, user_id)}")
+                acronym = self.decrypt_text(value, user_id)
+                country = ACRONYM_TO_COUNTRY.get(acronym, acronym)
+                lines.append(f"{prefix}:{country}")
             else:
                 lines.append(line)
         return "\n".join(lines)
@@ -188,7 +189,7 @@ class Encryptor:
             if file.is_file():
                 results.append(self.decrypt_file(str(file), raw_dir))
         return results
-    
+
     def decrypt_by_id(self, user_id: int, encrypted_dir: str = "encrypted_scores", raw_dir: str = "decrypted_scores") -> Path | None:
         """Decrypt a single file matching the given user_id."""
         for f in Path(encrypted_dir).glob(f"{user_id}_*.txt"):
