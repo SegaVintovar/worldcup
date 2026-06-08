@@ -1,5 +1,5 @@
 PYTHON = python3
-MAIN   = main.py
+MAIN   = wc_groups.py
 
 .PHONY: run decrypt decrypt-all
 
