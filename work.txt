@@ -7,3 +7,12 @@ Pages:
 
 class Session
 
+
+
+Prediction:
+    -choosing a match
+        -team 1 and team 2
+            score them,
+                but if you are saying 1:1 and it is knockout stage, then you still need to choose a winner
+
+    button : submit => init prediction => stored in DB
