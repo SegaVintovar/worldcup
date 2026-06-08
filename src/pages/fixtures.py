@@ -1,9 +1,8 @@
 from nicegui import ui
-from header import layout
+from .header import header
 
 
 @ui.page("/matches")
 def matches():
-    layout()
+    header()
     ui.lable("All matches")
-    
