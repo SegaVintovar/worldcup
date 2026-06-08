@@ -1,1 +1,3 @@
-from src.pages import 
+from src import prediction
+
+prediction()
