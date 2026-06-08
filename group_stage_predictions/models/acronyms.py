@@ -1,4 +1,3 @@
-
 COUNTRY_ACRONYMS = {
     "mexico": "mex",
     "south-africa": "rsa",
@@ -61,3 +60,9 @@ COUNTRY_ACRONYMS = {
     "panama": "pan",
 }
 
+# Allows either country names or acronyms as input
+COUNTRY_LOOKUP = {}
+
+for country, acronym in COUNTRY_ACRONYMS.items():
+    COUNTRY_LOOKUP[country.lower()] = country
+    COUNTRY_LOOKUP[acronym.lower()] = country
