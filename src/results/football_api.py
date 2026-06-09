@@ -171,18 +171,8 @@ def get_worldcup_matches() -> list[dict]:
     logger.info(f"Total matches loaded: {len(matches)}")
     return matches
 
-
-# ── DB sync helper ─────────────────────────────────────────────────────────────
-
 def sync_matches_to_db(db) -> None:
-    """
-    Fetches all matches and upserts them into the database.
-    Call this from the scheduler (e.g. every 30 minutes during the tournament).
-
-    Args:
-        db: SQLAlchemy session (from core.database.get_db)
-    """
-    from models.match import Match  # avoid circular import at module level
+    from src.services.database import Match
 
     matches = get_worldcup_matches()
     new_count = updated_count = 0
@@ -191,27 +181,27 @@ def sync_matches_to_db(db) -> None:
         existing = db.query(Match).filter_by(source_id=m["source_id"]).first()
 
         if existing:
-            # Update score if match has finished
-            if m["finished"] and not existing.finished:
+            if m["finished"] and not existing.played:
                 existing.home_score = m["home_score"]
                 existing.away_score = m["away_score"]
-                existing.finished   = True
+                existing.played     = True
                 updated_count += 1
         else:
             db.add(Match(
-                source_id    = m["source_id"],
-                home_team    = m["home_team"],
-                away_team    = m["away_team"],
-                kickoff_time = m["kickoff_time"],
-                stage        = m["stage"],
-                home_score   = m["home_score"],
-                away_score   = m["away_score"],
-                finished     = m["finished"],
+                source_id  = m["source_id"],
+                home_team  = m["home_team"],
+                away_team  = m["away_team"],
+                match_date = m["kickoff_time"],
+                stage      = m["stage"],
+                home_score = m["home_score"],
+                away_score = m["away_score"],
+                played     = m["finished"],
             ))
             new_count += 1
 
     db.commit()
     logger.info(f"Sync complete: {new_count} new, {updated_count} updated.")
+
 
 
 # ── Quick test ─────────────────────────────────────────────────────────────────
