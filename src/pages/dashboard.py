@@ -5,6 +5,6 @@ from src.services.header import header
 
 
 def dashboard_page():
-    header()
+    header("/dashboard")
     ui.label("Dashboard").classes("text-3xl font-bold mb-6")
     build_match_calendar()
