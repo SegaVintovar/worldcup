@@ -1,9 +1,11 @@
 """Leaderboard page — shows ranked users by total points."""
 from nicegui import ui
 from src.services.scoring import calculate_rankings
+from src.services.header import header
 
 
 def leaderboard_page():
+    header("/leaderboard")
     ui.label("🏆 Leaderboard").classes("text-3xl font-bold mb-6")
 
     rankings = calculate_rankings()
