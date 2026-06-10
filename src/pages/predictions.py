@@ -1,73 +1,125 @@
 """Predictions page — logged-in users submit score predictions."""
 from nicegui import ui
+
 from src.services.database import SessionLocal, Match, Prediction, User
+from src.services.header import header
+from src.services.match_calender import get_split_matches
+
+from zoneinfo import ZoneInfo
+AMSTERDAM = ZoneInfo("Europe/Amsterdam")
 
 
 def predictions_page(current_user: User):
-    db = SessionLocal()
-    try:
-        matches = db.query(Match).filter(Match.home_score.is_(None)).all()
+    header("/predict")
 
-        existing = {
-            p.match_id: p
-            for p in db.query(Prediction)
-            .filter_by(user_id=current_user.id)
-            .all()
-        }
+    ui.label(
+        f"Hello {current_user.login_42}, create your predictions below"
+    ).classes("text-2xl font-bold")
+
+    build_available_matches(current_user)
+
+
+def get_matches_without_predictions(current_user: User, matches: list[Match]) -> list[Match]:
+    db = SessionLocal()
+
+    try:
+        available_matches: list[Match] = []
+
+        for match in matches:
+            prediction = (
+                db.query(Prediction)
+                .filter(
+                    Prediction.user_id == current_user.id,
+                    Prediction.match_id == match.id,
+                )
+                .first()
+            )
+
+            if prediction is None:
+                available_matches.append(match)
+
+        return available_matches
+
     finally:
         db.close()
 
-    ui.label(f"Hello, {current_user.login_42}!").classes("text-2xl font-bold mb-4")
-    ui.label("Submit your predictions for upcoming matches:").classes("text-gray-600 mb-6")
 
-    if not matches:
-        ui.label("No upcoming matches yet. Check back soon!").classes("text-gray-400")
-        return
+def build_available_matches(current_user: User):
+    upcoming, _ = get_split_matches()
+    pred_available = get_matches_without_predictions(current_user, upcoming)
 
-    for match in matches:
-        pred = existing.get(match.id)
+    with ui.column().classes("w-1/2 gap-2"):
+        ui.label("📅 Available Matches").classes("text-xl font-bold")
 
-        with ui.card().classes("w-full mb-4 p-4"):
-            ui.label(f"{match.home_team}  vs  {match.away_team}").classes("text-lg font-semibold")
+        if pred_available:
+            buttons = []
 
-            with ui.row().classes("items-center gap-4 mt-2"):
-                home_input = ui.number(
+            for match in pred_available[:5]:
+                btn = ui.button().props('flat').classes(
+                    'w-full bg-green-100 hover:bg-green-200 text-black'
+                )
+                with btn:
+                    with ui.column().classes("gap-0 items-center w-full"):  # added items-center w-full
+                        ui.label(
+                            f"{match.home_team} vs {match.away_team}"
+                        ).classes("font-semibold text-sm m-0 leading-tight text-center")  # added text-center
+
+                        ui.label(
+                            match.match_date.astimezone(AMSTERDAM)
+                            .strftime("%d %b %Y %H:%M")
+                        ).classes("text-xs text-gray-600 m-0 leading-tight text-center")  # added text-center
+
+                        if match.stage:
+                            ui.label(match.stage).classes(
+                                "text-xs text-gray-400 m-0 leading-tight text-center"  # added text-center
+                            )
+
+                buttons.append((btn, match))
+
+
+            prediction_container = ui.column().classes('w-full')
+
+            # --- Pass 2: now that prediction_container exists, wire the clicks ---
+            for btn, match in buttons:
+                btn.on_click(lambda m=match: select_match(m, prediction_container))
+
+
+def select_match(match: Match, container):
+    # Unchanged from your original
+    container.clear()
+
+    with container:
+        with ui.card().classes("w-full p-4 bg-green-50"):
+
+            ui.label(f"{match.home_team} vs {match.away_team}")\
+                .classes("text-xl font-bold")
+
+            ui.label(
+                match.match_date.astimezone(AMSTERDAM)
+                .strftime("%d %b %Y %H:%M")
+            ).classes("text-sm text-gray-500")
+
+            ui.separator()
+
+            with ui.row().classes("items-center justify-between w-full mt-4"):
+
+                ui.number(
                     label=match.home_team,
-                    value=pred.pred_home_score if pred else 0,
                     min=0,
-                    max=20
+                    max=20,
                 ).classes("w-24")
 
-                ui.label("—").classes("text-xl")
+                ui.label("vs").classes("text-lg font-bold")
 
-                away_input = ui.number(
+                ui.number(
                     label=match.away_team,
-                    value=pred.pred_away_score if pred else 0,
                     min=0,
-                    max=20
+                    max=20,
                 ).classes("w-24")
 
-                def save(m=match, h=home_input, a=away_input, p=pred):
-                    db2 = SessionLocal()
-                    try:
-                        if p:
-                            p.pred_home_score = int(h.value)
-                            p.pred_away_score = int(a.value)
-                            db2.merge(p)
-                        else:
-                            db2.add(Prediction(
-                                user_id=current_user.id,
-                                match_id=m.id,
-                                pred_home_score=int(h.value),
-                                pred_away_score=int(a.value),
-                            ))
+            ui.separator()
 
-                        db2.commit()
-                        ui.notify("Prediction saved!", color="positive")
-                    finally:
-                        db2.close()
-
-                ui.button(
-                    "Save",
-                    on_click=save
-                ).classes("bg-green-600 text-white px-4 py-2 rounded")
+            ui.button(
+                "Save prediction",
+                on_click=lambda: ui.notify("Saved (not wired yet)"),
+            ).classes("mt-4 w-full bg-blue-500 text-white")
