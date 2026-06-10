@@ -48,7 +48,7 @@ class Match(Base):
     winner        = Column(String, nullable=True)
     played        = Column(Boolean, default=False)
 
-    match_date    = Column(DateTime)
+    match_date    = Column(DateTime(timezone=True))
     stage         = Column(String, nullable=True)
 
     predictions   = relationship("Prediction", back_populates="match")

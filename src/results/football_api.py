@@ -10,7 +10,9 @@ No API key required for either source.
 
 import requests
 import logging
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
+
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +26,7 @@ OPENFOOTBALL_URL = (
 THESPORTSDB_URL = "https://www.thesportsdb.com/api/v1/json/1/eventsseason.php"
 THESPORTSDB_LEAGUE_ID = "4429"   # FIFA World Cup on TheSportsDB
 
+AMSTERDAM = ZoneInfo("Europe/Amsterdam")
 
 # ── Fetch raw data ─────────────────────────────────────────────────────────────
 
@@ -58,16 +61,21 @@ def _fetch_thesportsdb() -> list[dict]:
 # ── Normalize ──────────────────────────────────────────────────────────────────
 
 def _parse_kickoff(date_str: str, time_str: str) -> datetime | None:
-    """
-    Parses openfootball date + time into a UTC-aware datetime.
-    Time strings look like '13:00 UTC-6' or '20:00 UTC'.
-    """
     try:
-        # Strip timezone label — openfootball times are local to venue,
-        # we store as-is and note the offset for display purposes.
-        time_clean = time_str.split(" ")[0]  # e.g. '13:00'
+        parts = time_str.split(" ")
+        time_clean = parts[0]  # '15:00'
+        offset_str = parts[1] if len(parts) > 1 else "UTC"  # 'UTC-6' or 'UTC'
+
         dt = datetime.strptime(f"{date_str} {time_clean}", "%Y-%m-%d %H:%M")
-        return dt.replace(tzinfo=timezone.utc)  # treat as UTC for now
+
+        if offset_str == "UTC":
+            offset_hours = 0
+        else:
+            offset_hours = int(offset_str.replace("UTC", ""))  # -6
+
+        offset = timezone(timedelta(hours=offset_hours))
+        return dt.replace(tzinfo=offset).astimezone(timezone.utc)
+
     except Exception:
         return None
 
