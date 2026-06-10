@@ -9,9 +9,11 @@ from src.pages.predictions import predictions_page
 from src.pages.leaderboard import leaderboard_page
 from src.pages.dashboard import dashboard_page
 
+# services
 from src.services.database import init_db, SessionLocal, User, Match
 from src.services.auth import exchange_code_for_user
 
+# outsourced
 from src.results.football_api import sync_matches_to_db
 
 
@@ -50,29 +52,29 @@ def get_current_user() -> User | None:
     finally:
         db.close()
 
-@app.get("/auth/callback")
-async def oauth_callback(request: Request):
-    code = request.query_params.get("code")
-    if not code:
-        return RedirectResponse("/")
-    profile = await exchange_code_for_user(code)
-    db = SessionLocal()
-    try:
-        user = db.query(User).filter_by(login_42=profile["login"]).first()
-        if not user:
-            user = User(
-                login_42=profile["login"],
-                avatar_url=profile.get("image", {}).get("link"),
-            )
-            db.add(user)
-        else:
-            user.avatar_url = profile.get("image", {}).get("link")
-        db.commit()
-        db.refresh(user)
-        app.storage.user["user_id"] = user.id
-    finally:
-        db.close()
-    return RedirectResponse("/predict")
+# @app.get("/auth/callback")
+# async def oauth_callback(request: Request):
+#     code = request.query_params.get("code")
+#     if not code:
+#         return RedirectResponse("/")
+#     profile = await exchange_code_for_user(code)
+#     db = SessionLocal()
+#     try:
+#         user = db.query(User).filter_by(login_42=profile["login"]).first()
+#         if not user:
+#             user = User(
+#                 login_42=profile["login"],
+#                 avatar_url=profile.get("image", {}).get("link"),
+#             )
+#             db.add(user)
+#         else:
+#             user.avatar_url = profile.get("image", {}).get("link")
+#         db.commit()
+#         db.refresh(user)
+#         app.storage.user["user_id"] = user.id
+#     finally:
+#         db.close()
+#     return RedirectResponse("/predict")
 
 @ui.page("/dashboard")
 def dashboard():
@@ -87,19 +89,9 @@ def index():
 def predict():
     user = get_current_user()
     if not user:
-        ui.navigate.to("/")
-        return
-    with ui.column().classes("max-w-2xl mx-auto p-6"):
-        with ui.row().classes("w-full justify-between items-center mb-6"):
-            ui.link("🏆 Leaderboard", "/leaderboard").classes("text-blue-600")
-            if DEV_MODE:
-                ui.label("⚠️ DEV MODE").classes("text-xs text-orange-400")
-            else:
-                ui.button("Logout", on_click=lambda: (
-                    app.storage.user.clear(),
-                    ui.navigate.to("/")
-                )).classes("text-sm text-gray-500")
-        predictions_page(user)
+        ui.navigate.to("/dashboard")
+
+    predictions_page(user)
 
 @ui.page("/leaderboard")
 def leaderboard():
