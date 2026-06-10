@@ -1,0 +1,36 @@
+v 1.0.0
+    added the goingre groupstage shit
+    added a docker file
+    some basic archetecture
+
+v 1.0.1
+    added the whiteboard
+
+v 1.0.2
+    added venv
+    added src
+        services
+        models
+
+v 2.0.0
+    added claude coded website
+        new docker
+        new venv config
+        new pages
+        new gui
+        new database
+    
+    trashed old parts
+        old docker
+        old docker compose
+        old main copies
+        old nginx
+
+v 2.0.1
+    fixed alot of claude coded issues
+    used footall api
+        filled matches database
+    fixed dev mode login and normal login
+    more make file commands
+
+
