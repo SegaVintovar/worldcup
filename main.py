@@ -76,6 +76,7 @@ async def oauth_callback(request: Request):
 
 @ui.page("/dashboard")
 def dashboard():
+    print("Dashboard route hit!")
     dashboard_page()
 
 @ui.page("/")

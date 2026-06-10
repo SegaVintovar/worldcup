@@ -12,9 +12,9 @@ def login_page():
         ui.label("Predict match scores. Climb the leaderboard.").classes("text-gray-500 mb-8")
         if DEV_MODE:
             ui.button(
-            "Login in DEV_MODE",
-            on_click=lambda: ui.navigate.to("/")
-            ).classes("bg-red text-white px-8 py-3 text-lg rounded")
+                "Login in DEV_MODE",
+                on_click=lambda: ui.navigate.to("/dashboard", new_tab=False)
+            )
 
         else:
             ui.button(

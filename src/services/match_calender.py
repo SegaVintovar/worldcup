@@ -2,45 +2,60 @@ from src.services.database import SessionLocal, Match
 
 from nicegui import ui
 
+from zoneinfo import ZoneInfo
+AMSTERDAM = ZoneInfo("Europe/Amsterdam")
 
 def build_match_calendar():
     upcoming, finished = get_split_matches()
 
-    with ui.row().classes('w-full gap-8'):
+    with ui.row().classes('w-full gap-6 items-start'):
 
         # Upcoming matches
-        with ui.column().classes('w-1/2'):
+        with ui.column().classes('flex-1 gap-2'):
             ui.label('📅 Upcoming Matches').classes('text-xl font-bold')
 
-            for match in upcoming:
-                with ui.card().classes('w-full'):
-                    ui.label(
-                        f'{match.home_team} vs {match.away_team}'
-                    ).classes('font-semibold')
+            if upcoming:
+                for match in upcoming[:5]:
+                    with ui.card().classes('w-full bg-green-50 border-l-4 border-green-400 py-1'):
+                        with ui.column().classes('gap-0'):
 
-                    ui.label(
-                        match.match_date.strftime('%d %b %Y %H:%M')
-                    )
+                            ui.label(
+                                f'{match.home_team} vs {match.away_team}'
+                            ).classes('font-semibold text-sm m-0 leading-tight')
 
-                    if match.stage:
-                        ui.label(match.stage)
+                            ui.label(
+                                match.match_date.astimezone(AMSTERDAM).strftime('%d %b %Y %H:%M')
+                            ).classes('text-xs text-gray-600 m-0 leading-tight')
+
+                            if match.stage:
+                                ui.label(match.stage).classes('text-xs text-gray-400 m-0 leading-tight')
+
+            else:
+                ui.label('No upcoming matches').classes('text-gray-500 italic')
 
         # Finished matches
-        with ui.column().classes('w-1/2'):
+        with ui.column().classes('flex-1 gap-2'):
             ui.label('✅ Finished Matches').classes('text-xl font-bold')
 
-            for match in finished:
-                with ui.card().classes('w-full'):
-                    ui.label(
-                        f'{match.home_team} {match.home_score} - {match.away_score} {match.away_team}'
-                    ).classes('font-semibold')
+            if finished:
+                for match in finished[:5]:
+                    with ui.card().classes('w-full bg-red-50 border-l-4 border-red-400 py-1'):
+                        with ui.column().classes('gap-0'):
 
-                    ui.label(
-                        match.match_date.strftime('%d %b %Y %H:%M')
-                    )
+                            ui.label(
+                                f'{match.home_team} {match.home_score} - {match.away_score} {match.away_team}'
+                            ).classes('font-semibold text-sm m-0 leading-tight')
 
-                    if match.winner:
-                        ui.label(f'Winner: {match.winner}')
+                            ui.label(
+                                match.match_date.astimezone(AMSTERDAM).strftime('%d %b %Y %H:%M')
+                            ).classes('text-xs text-gray-600 m-0 leading-tight')
+
+                            if match.winner:
+                                ui.label(f'Winner: {match.winner}') \
+                                    .classes('text-xs text-gray-400 m-0 leading-tight')
+
+            else:
+                ui.label('No finished matches yet').classes('text-gray-500 italic')
 
 
 def get_split_matches() -> tuple[list[Match], list[Match]]:
