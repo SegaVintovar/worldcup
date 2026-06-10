@@ -3,11 +3,15 @@ from nicegui import ui, app
 from fastapi import Request
 from fastapi.responses import RedirectResponse
 
-from src.services.database import init_db, SessionLocal, User, Match
-from src.services.auth import exchange_code_for_user
+# pages
 from src.pages.login import login_page
 from src.pages.predictions import predictions_page
 from src.pages.leaderboard import leaderboard_page
+from src.pages.dashboard import dashboard_page
+
+from src.services.database import init_db, SessionLocal, User, Match
+from src.services.auth import exchange_code_for_user
+
 from src.results.football_api import sync_matches_to_db
 
 
@@ -69,6 +73,10 @@ async def oauth_callback(request: Request):
     finally:
         db.close()
     return RedirectResponse("/predict")
+
+@ui.page("/dashboard")
+def dashboard():
+    dashboard_page()
 
 @ui.page("/")
 def index():
