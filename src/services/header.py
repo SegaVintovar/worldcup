@@ -1,20 +1,32 @@
-from nicegui import ui
+from nicegui import ui, app
+
+app.add_static_files('/assets', 'src/assets')
 
 
 def header(active_path: str = "") -> None:
-    # if active_path in "
     css = 'bg-green-600 text-black'
-    css_predict = f"{css}" if active_path == "/predict" else ""
-    css_leaderboard = f"{css}" if active_path == "/leaderboard" else ""
-    css_dashboard = f"{css}" if active_path == "/dashboard" else ""
+    css_predict = css if active_path == "/predict" else ""
+    css_leaderboard = css if active_path == "/leaderboard" else ""
+    css_dashboard = css if active_path == "/dashboard" else ""
 
-    with ui.header():
+    with ui.header().classes('items-center'):
+        # Logo on the left
+        ui.image('/assets/sidequest_logo.png').style(
+            'height: 32px; width: auto;'
+        )
+
         with ui.button_group():
+            ui.button(
+                "Dashboard",
+                on_click=lambda: ui.navigate.to('/dashboard', new_tab=False)
+            ).classes(css_dashboard)
 
-            ui.button("Dashboard", on_click=lambda: ui.navigate.to('/dashboard', new_tab=False)).classes(css_dashboard)
-            # ui.button("Dashboard", on_click=lambda: ui.notify('Swithed to Dashboard'))
-            ui.button("Leaderboard", on_click=lambda: ui.navigate.to('/leaderboard', new_tab=False)).classes(css_leaderboard)
-            ui.button("My Predictions", on_click=lambda: ui.navigate.to('/predict', new_tab=False)).classes(css_predict)
+            ui.button(
+                "Leaderboard",
+                on_click=lambda: ui.navigate.to('/leaderboard', new_tab=False)
+            ).classes(css_leaderboard)
 
-
-# .classes('bg-green-600 text-black')
+            ui.button(
+                "My Predictions",
+                on_click=lambda: ui.navigate.to('/predict', new_tab=False)
+            ).classes(css_predict)
