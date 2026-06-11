@@ -34,3 +34,18 @@ v 2.0.1
     more make file commands
 
 
+v 2.1.0
+    added dashboard page
+        added matches calender
+    added basic navigation
+    added colours to things
+    fixed time of matches database
+
+v 2.2.0
+    added temporary dev login
+    fixed predict page
+        show 5 available matches
+        clickable matches
+        enter in number values
+        added non functional save button
+        
