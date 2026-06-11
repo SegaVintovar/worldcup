@@ -78,18 +78,25 @@ def get_current_user() -> User | None:
 
 @ui.page("/dashboard")
 def dashboard():
+    user = get_current_user()
+    if not user:
+        ui.navigate.to("/")
     print("Dashboard route hit!")
     dashboard_page()
 
 @ui.page("/")
 def index():
-    login_page()
+    user = get_current_user()
+    if user:
+        ui.navigate.to("/dashboard")
+    else:
+        login_page()
 
 @ui.page("/predict")
 def predict():
     user = get_current_user()
     if not user:
-        ui.navigate.to("/dashboard")
+        ui.navigate.to("/")
 
     predictions_page(user)
 
@@ -106,4 +113,5 @@ ui.run(
     favicon="⚽",
     storage_secret=os.environ.get("APP_SECRET_KEY", "dev-secret"),
     reload=False,
+    on_air=True
 )
