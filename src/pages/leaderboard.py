@@ -7,7 +7,7 @@ from src.services.header import header
 def leaderboard_page():
     header("/leaderboard")
     ui.label("🏆 Leaderboard").classes("text-3xl font-bold mb-6")
-
+    
     rankings = calculate_rankings()
     if not rankings:
         ui.label("No scores yet — predictions will appear here after matches are played.").classes("text-gray-400")
