@@ -81,8 +81,9 @@ def dashboard():
     user = get_current_user()
     if not user:
         ui.navigate.to("/")
-    print("Dashboard route hit!")
-    dashboard_page()
+    else:
+        print("Dashboard route hit!")
+        dashboard_page(user)
 
 @ui.page("/")
 def index():
@@ -97,8 +98,8 @@ def predict():
     user = get_current_user()
     if not user:
         ui.navigate.to("/")
-
-    predictions_page(user)
+    else:
+        predictions_page(user)
 
 @ui.page("/leaderboard")
 def leaderboard():
@@ -112,6 +113,5 @@ ui.run(
     title="Football Predictor",
     favicon="⚽",
     storage_secret=os.environ.get("APP_SECRET_KEY", "dev-secret"),
-    reload=False,
-    on_air=True
+    reload=False
 )
