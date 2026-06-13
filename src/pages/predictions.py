@@ -209,4 +209,11 @@ def select_match(match: Match, container):
             ui.button(
                 "Save prediction",
                 on_click=lambda: ui.notify("Saved (not wired yet)"),
-            ).classes("mt-4 w-full bg-blue-500 text-white")
+                
+                ).classes("mt-4 w-full bg-blue-500 text-white")
+
+def save_prediction(user_id, match_id, home_goals, away_goals, winner):
+    ui.notify("Saving... Ooops, DB not connected yet.")
+    db = SessionLocal()
+
+    ...
