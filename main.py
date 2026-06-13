@@ -14,26 +14,33 @@ from src.services.database import init_db, SessionLocal, User, Match
 from src.services.auth import exchange_code_for_user
 
 # outsourced
-from src.results.football_api import sync_matches_to_db
+from src.results.football_api import sync_matches_to_db, update_matches
 
 
 DEV_MODE = os.environ.get("DEV_MODE", "false").lower() == "true"
 
+
 @app.on_startup
 async def startup():
+    print("🚀 App starting up...")
     init_db()
+
     db = SessionLocal()
     try:
-
         match_count = db.query(Match).count()
+        print(f"📊 Matches in DB: {match_count}")
+
         if match_count == 0:
-            print("No matches found, syncing from API...")
+            print("⚽ No matches found, syncing from API...")
             sync_matches_to_db(db)
-            print(f"Sync done. {db.query(Match).count()} matches in DB.")
+            print(f"✅ Sync complete. Now {db.query(Match).count()} matches in DB.")
         else:
-            print(f"Database ready. ({match_count} matches already loaded)")
+            print("🔄 Updating match results...")
+            update_matches(db)
+            print("✅ Match results updated.")
+
     except Exception as e:
-        print(f"Startup sync failed: {e}")
+        print("❌ Startup sync failed!")
         import traceback
         traceback.print_exc()
     finally:
