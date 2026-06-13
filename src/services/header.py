@@ -1,7 +1,6 @@
 from nicegui import ui, app
 from pathlib import Path
 
-# app.add_static_files('/assets', 'src/assets')
 ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
 app.add_static_files("/assets", str(ASSETS_DIR))
 
@@ -13,8 +12,9 @@ def header(active_path: str = "") -> None:
     css_dashboard = css if active_path == "/dashboard" else ""
 
     with ui.header().classes('items-center'):
-        with ui.row():
-            ui.image('/assets/sidequest_logo.png').classes('w-12 h-12 object-contain shrink-0')
+        with ui.row().classes('items-center'):
+            with ui.element('div').classes('w-12 h-12 rounded-full overflow-hidden bg-transparent'):
+                ui.image('/assets/sidequest_logo.png').classes('w-full h-full object-cover')
             with ui.button_group():
                 ui.button(
                     "Dashboard",
