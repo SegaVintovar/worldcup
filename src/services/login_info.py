@@ -22,7 +22,7 @@ def login_info(user: User):
 		ava = user.avatar_url
 	else:
 		ava = '/assets/image.png'
-	with ui.row().style("width: 100%; justify-content: center; border: 1px;"):
+	with ui.card().style("width: 100%; justify-content: center; border: 1px;"):
 		with ui.column().classes('p-3 items-center justify-center'):
 			ui.image(ava).classes('mx-auto').style('width: 15em; height: 15em')
 		with ui.column():
