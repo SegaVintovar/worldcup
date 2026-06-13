@@ -17,7 +17,7 @@ from src.services.auth import exchange_code_for_user
 from src.services.header import header
 
 # outsourced
-from src.results.football_api import sync_matches_to_db
+from src.results.football_api import sync_matches_to_db, update_matches
 
 logger = logging.getLogger(__name__)
 

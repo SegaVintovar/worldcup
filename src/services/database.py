@@ -50,6 +50,7 @@ class Match(Base):
 
     match_date    = Column(DateTime(timezone=True))
     stage         = Column(String, nullable=True)
+    phase         = Column(String, nullable=False)
 
     predictions   = relationship("Prediction", back_populates="match")
 
@@ -64,6 +65,7 @@ class Prediction(Base):
 
     pred_home_score = Column(Integer, nullable=False)
     pred_away_score = Column(Integer, nullable=False)
+    winner          = Column(String, nullable=True)
 
     points_earned = Column(Integer, default=0)
 

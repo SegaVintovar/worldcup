@@ -12,13 +12,13 @@ run:
 # ── Show tables ─────────────────────────────────────────────────────────────
 
 show-users:
-	$(PSQL) -c "SELECT id, login_42, avatar_url, p_score, created_at FROM users;"
+	$(PSQL) -c "SELECT * FROM users LIMIT 20;"
 
 show-matches:
-	$(PSQL) -c "SELECT id, home_team, away_team, match_date, stage, played, home_score, away_score FROM matches ORDER BY match_date LIMIT 30;"
+	$(PSQL) -c "SELECT * FROM matches ORDER BY match_date LIMIT 20;"
 
 show-predictions:
-	$(PSQL) -c "SELECT p.id, u.login_42, m.home_team, m.away_team, p.pred_home_score, p.pred_away_score, p.points_earned FROM predictions p JOIN users u ON p.user_id = u.id JOIN matches m ON p.match_id = m.id;"
+	$(PSQL) -c "SELECT * FROM predictions LIMIT 20;"
 
 show-db: show-users show-matches show-predictions
 
@@ -36,3 +36,6 @@ reset-predictions:
 reset-db:
 	docker compose down -v
 	docker compose up -d db
+	@echo "Waiting for DB to be ready..."
+	@sleep 3
+	docker compose up -d predictor_app
