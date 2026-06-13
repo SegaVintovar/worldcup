@@ -57,7 +57,13 @@ def get_upcoming_predictions(current_user: User) -> list[tuple[Match, Prediction
         db.close()
 
 
-def save_prediction(current_user: User, match: Match, home_score: int, away_score: int):
+def save_prediction(
+    current_user:   User,
+    match:          Match,
+    home_score:     int,
+    away_score:     int,
+    winner:         str | None = None,
+    ):
     db = SessionLocal()
     try:
         existing = (
@@ -68,17 +74,22 @@ def save_prediction(current_user: User, match: Match, home_score: int, away_scor
             )
             .first()
         )
+
         if existing:
             existing.pred_home_score = home_score
             existing.pred_away_score = away_score
+            existing.winner = winner
         else:
             pred = Prediction(
                 user_id=current_user.id,
                 match_id=match.id,
                 pred_home_score=home_score,
                 pred_away_score=away_score,
+                winner=winner,
             )
             db.add(pred)
+
         db.commit()
+
     finally:
         db.close()
