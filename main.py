@@ -41,15 +41,18 @@ def daily_sync() -> None:
     global LAST_SYNC
     db = SessionLocal()
     try:
-        sync_matches_to_db(db)
+        match_count = db.query(Match).count()
+        if match_count == 0:
+            sync_matches_to_db(db)
+        else:
+            update_matches(db)
+        print("sync and update was done", flush=True)
     finally:
         db.close()
     update_prediction_scores()
     update_user_scores()
 
     LAST_SYNC = datetime.now(timezone.utc)
-
-
 
 # ── Startup ───────────────────────────────────────────────────────────────────
 
@@ -60,7 +63,6 @@ async def startup():
     try:
         match_count = db.query(Match).count()
         if match_count == 0:
-            
             sync_matches_to_db(db)
         else:
             update_matches(db)
