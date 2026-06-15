@@ -72,6 +72,14 @@ def _parse_kickoff(date_str: str, time_str: str) -> datetime | None:
     except Exception:
         return None
 
+def _compute_winner(home_team, away_team, home_score, away_score):
+    if home_score is None or away_score is None:
+        return None
+    if home_score > away_score:
+        return home_team
+    if away_score > home_score:
+        return away_team
+    return "Draw"
 
 def _normalize_openfootball(raw: list[dict]) -> list[dict]:
     matches = []
@@ -170,17 +178,22 @@ def sync_matches_to_db(db) -> None:
     for m in matches:
         existing = db.query(Match).filter_by(source_id=m["source_id"]).first()
 
+        winner = _compute_winner(
+            m["home_team"],
+            m["away_team"],
+            m["home_score"],
+            m["away_score"]
+        )
+
         if existing:
-            if m["finished"] and not existing.played:
+            # always keep DB consistent if new data arrives
+            if m["finished"]:
                 existing.home_score = m["home_score"]
                 existing.away_score = m["away_score"]
                 existing.played = True
-                existing.winner = (
-                    existing.home_team if existing.home_score > existing.away_score else
-                    existing.away_team if existing.away_score > existing.home_score else
-                    "Draw"
-                )
+                existing.winner = winner
                 updated_count += 1
+
         else:
             db.add(Match(
                 source_id  = m["source_id"],
@@ -192,7 +205,7 @@ def sync_matches_to_db(db) -> None:
                 home_score = m["home_score"],
                 away_score = m["away_score"],
                 played     = m["finished"],
-                # winner     = m["winner"]
+                winner     = winner
             ))
             new_count += 1
 
@@ -201,10 +214,6 @@ def sync_matches_to_db(db) -> None:
 
 
 def update_matches(db) -> None:
-    """
-    Update existing matches from external sources.
-    Does NOT create new fixtures.
-    """
     from src.services.database import Match
 
     external_by_id = {m["source_id"]: m for m in get_worldcup_matches()}
@@ -217,29 +226,29 @@ def update_matches(db) -> None:
 
         changed = False
 
+        new_winner = _compute_winner(
+            match.home_team,
+            match.away_team,
+            external["home_score"],
+            external["away_score"]
+        )
+
+        # First time match becomes finished
         if external["finished"] and not match.played:
             match.played = True
             match.home_score = external["home_score"]
             match.away_score = external["away_score"]
-            match.winner = (
-                match.home_team if match.home_score > match.away_score else
-                match.away_team if match.away_score > match.home_score else
-                "Draw"
-            )
+            match.winner = new_winner
             changed = True
 
+        # Score correction / update
         elif match.played and (
             match.home_score != external["home_score"]
             or match.away_score != external["away_score"]
         ):
             match.home_score = external["home_score"]
             match.away_score = external["away_score"]
-            # Recalculate winner on score correction
-            match.winner = (
-                match.home_team if match.home_score > match.away_score else
-                match.away_team if match.away_score > match.home_score else
-                "Draw"
-            )
+            match.winner = new_winner
             changed = True
 
         if changed:
@@ -247,5 +256,3 @@ def update_matches(db) -> None:
 
     db.commit()
     logger.info(f"Updated {updated_count} matches.")
-
-
