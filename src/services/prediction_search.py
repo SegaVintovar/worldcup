@@ -1,5 +1,6 @@
 """DB queries and search logic for predictions."""
 
+from datetime import datetime
 from nicegui import ui
 from zoneinfo import ZoneInfo
 from src.services.database import SessionLocal, Match, Prediction, User
@@ -9,9 +10,14 @@ AMSTERDAM = ZoneInfo("Europe/Amsterdam")
 
 def get_matches_without_predictions(current_user: User, matches: list[Match]) -> list[Match]:
     db = SessionLocal()
+    now = datetime.now(AMSTERDAM)
     try:
         available: list[Match] = []
         for match in matches:
+            # Drop matches that have already kicked off
+            match_time = match.match_date.astimezone(AMSTERDAM)
+            if match_time <= now:
+                continue
             prediction = (
                 db.query(Prediction)
                 .filter(
@@ -27,19 +33,36 @@ def get_matches_without_predictions(current_user: User, matches: list[Match]) ->
         db.close()
 
 
-def get_finished_predictions(current_user: User) -> list[tuple[Match, Prediction]]:
+def get_finished_matches_with_predictions(current_user: User) -> list[tuple[Match, Prediction | None]]:
+    """All finished matches, with the user's prediction if they made one (else None)."""
     db = SessionLocal()
     try:
-        return (
-            db.query(Match, Prediction)
-            .join(Prediction, Prediction.match_id == Match.id)
-            .filter(Prediction.user_id == current_user.id, Match.played == True)
+        matches = (
+            db.query(Match)
+            .filter(Match.played == True)
             .order_by(Match.match_date.desc())
             .limit(5)
             .all()
         )
+        result = []
+        for match in matches:
+            prediction = (
+                db.query(Prediction)
+                .filter(
+                    Prediction.user_id == current_user.id,
+                    Prediction.match_id == match.id,
+                )
+                .first()
+            )
+            result.append((match, prediction))
+        return result
     finally:
         db.close()
+
+
+# Keep old name as alias so nothing else breaks
+def get_finished_predictions(current_user: User):
+    return [(m, p) for m, p in get_finished_matches_with_predictions(current_user) if p is not None]
 
 
 def get_upcoming_predictions(current_user: User) -> list[tuple[Match, Prediction]]:
@@ -90,7 +113,7 @@ def save_prediction(
         db.close()
 
 
-def run_search(home_val, away_val, available, finished, upcoming, container):
+def run_search(home_val, away_val, available, finished, upcoming, container, on_select, pred_ref):
     container.clear()
     h = home_val.strip().lower()
     a = away_val.strip().lower()
@@ -112,21 +135,25 @@ def run_search(home_val, away_val, available, finished, upcoming, container):
                 found_any = True
                 ui.label("Available to predict").classes("text-sm font-semibold text-gray-500 mt-2 mb-1")
                 for m in avail_hits:
-                    ui.label(
-                        f"{m.home_team} vs {m.away_team} · "
-                        f"{m.match_date.astimezone(AMSTERDAM).strftime('%d %b %H:%M')}"
-                    ).classes("text-sm")
+                    with ui.row().classes("w-full items-center justify-between"):
+                        ui.label(
+                            f"{m.home_team} vs {m.away_team} · "
+                            f"{m.match_date.astimezone(AMSTERDAM).strftime('%d %b %H:%M')}"
+                        ).classes("text-sm")
+                        ui.button("Select", on_click=lambda _, match=m: on_select(match, pred_ref["container"])) \
+                            .props("flat dense").classes("text-xs text-green-700")
 
             fin_hits = [(m, p) for m, p in finished if matches_search(m.home_team, m.away_team)]
             if fin_hits:
                 found_any = True
                 ui.label("Finished").classes("text-sm font-semibold text-gray-500 mt-3 mb-1")
                 for m, p in fin_hits:
+                    pick = f"{p.pred_home_score}–{p.pred_away_score}" if p else "None"
+                    pts = p.points_earned or 0 if p else 0
                     ui.label(
                         f"{m.home_team} vs {m.away_team} · "
                         f"Result {m.home_score}–{m.away_score} · "
-                        f"Your pick {p.pred_home_score}–{p.pred_away_score} · "
-                        f"{p.points_earned or 0} pts"
+                        f"Your pick {pick} · {pts} pts"
                     ).classes("text-sm")
 
             up_hits = [(m, p) for m, p in upcoming if matches_search(m.home_team, m.away_team)]

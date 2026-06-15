@@ -3,7 +3,7 @@
 from nicegui import ui
 from zoneinfo import ZoneInfo
 from src.services.database import Match, User
-from src.services.prediction_search import get_finished_predictions, get_upcoming_predictions
+from src.services.prediction_search import get_finished_matches_with_predictions, get_upcoming_predictions
 
 AMSTERDAM = ZoneInfo("Europe/Amsterdam")
 
@@ -53,35 +53,37 @@ def build_match_button(match: Match):
 
 
 def build_rules_card():
-    ui.label("Rules").classes("text-lg font-bold mb-3")
-    for pts, label in [
-        ("3 pts", "Exact score"),
-        ("1 pt",  "Correct winner"),
-        ("0 pts", "Wrong prediction"),
-    ]:
-        with ui.row().classes("w-full items-center py-2 border-b border-gray-100"):
-            ui.label(pts).classes("font-bold text-sm w-14 text-green-700")
-            ui.label(label).classes("text-sm")
+    with ui.row().classes("w-full items-center gap-6"):
+        with ui.column().classes("gap-1"):
+            ui.label("Rules").classes("text-sm font-bold")
+            for pts, label in [
+                ("3 pts", "Exact score"),
+                ("1 pt",  "Correct winner"),
+                ("0 pts", "Wrong prediction"),
+            ]:
+                with ui.row().classes("items-center gap-2"):
+                    ui.label(pts).classes("font-bold text-xs w-10 text-green-700")
+                    ui.label(label).classes("text-xs")
 
-    ui.label("Deadline").classes("font-semibold text-sm mt-4 mb-1")
-    ui.label("Predictions lock when the match kicks off.").classes("text-xs text-gray-500")
-
-    ui.label("Tips").classes("font-semibold text-sm mt-3 mb-1")
-    ui.label("All times are Amsterdam time (CEST).").classes("text-xs text-gray-500")
+        with ui.column().classes("gap-1"):
+            ui.label("Deadline").classes("text-sm font-bold")
+            ui.label("Predictions lock at kickoff.").classes("text-xs text-gray-500")
+            ui.label("Tips").classes("text-sm font-bold mt-1")
+            ui.label("All times are Amsterdam time (CEST).").classes("text-xs text-gray-500")
 
 
 def build_finished_matches(current_user: User):
-    finished = get_finished_predictions(current_user)
+    rows = get_finished_matches_with_predictions(current_user)
 
     with ui.column().classes("flex-1 gap-2"):
         ui.label("✅ Finished matches").classes("text-xl font-bold")
 
-        if not finished:
+        if not rows:
             ui.label("No finished matches yet.").classes("text-sm text-gray-400")
             return
 
-        for match, prediction in finished:
-            pts = prediction.points_earned or 0
+        for match, prediction in rows:
+            pts = prediction.points_earned if prediction else 0
             pts_color = (
                 "text-green-700" if pts == 3
                 else "text-yellow-600" if pts == 1
@@ -92,7 +94,10 @@ def build_finished_matches(current_user: User):
                     ui.label(f"{match.home_team} vs {match.away_team}").classes("font-semibold text-sm")
                     ui.label(f"{pts} pts").classes(f"text-xs font-bold {pts_color}")
                 ui.label(f"Result: {match.home_score} – {match.away_score}").classes("text-sm mt-1")
-                ui.label(f"Your pick: {prediction.pred_home_score} – {prediction.pred_away_score}").classes("text-xs text-gray-500")
+                if prediction:
+                    ui.label(f"Your pick: {prediction.pred_home_score} – {prediction.pred_away_score}").classes("text-xs text-gray-500")
+                else:
+                    ui.label("Your pick: None").classes("text-xs text-gray-400 italic")
 
 
 def build_my_predictions(current_user: User):

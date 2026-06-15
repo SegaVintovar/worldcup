@@ -19,7 +19,7 @@ from src.services.header import header
 # outsourced
 from src.results.football_api import sync_matches_to_db, update_matches
 
-logger = logging.getLogger(__name__)
+
 
 DEV_MODE = os.environ.get("DEV_MODE", "false").lower() == "true"
 
@@ -55,7 +55,7 @@ def score_predictions() -> None:
         )
 
         if not unscored:
-            logger.info("score_predictions: nothing to score.")
+            
             return
 
         users_to_update: dict[int, int] = {}  # user_id -> extra points
@@ -84,14 +84,10 @@ def score_predictions() -> None:
                 user.p_score = (user.p_score or 0) + extra
 
         db.commit()
-        logger.info(
-            f"score_predictions: scored {len(unscored)} predictions "
-            f"across {len(users_to_update)} users."
-        )
+
 
     except Exception as e:
         db.rollback()
-        logger.error(f"score_predictions failed: {e}")
         import traceback
         traceback.print_exc()
     finally:
@@ -102,15 +98,14 @@ def score_predictions() -> None:
 
 def daily_sync() -> None:
     """Sync matches from the API, then score any newly finished ones."""
-    logger.info("daily_sync: starting match sync...")
+
     db = SessionLocal()
     try:
         sync_matches_to_db(db)
     finally:
         db.close()
-    logger.info("daily_sync: scoring predictions...")
     score_predictions()
-    logger.info("daily_sync: done.")
+
 
 
 # ── Startup ───────────────────────────────────────────────────────────────────
@@ -122,13 +117,11 @@ async def startup():
     try:
         match_count = db.query(Match).count()
         if match_count == 0:
-            logger.info("No matches found, syncing from API...")
+            
             sync_matches_to_db(db)
-            logger.info(f"Sync done. {db.query(Match).count()} matches in DB.")
         else:
-            logger.info(f"Database ready. ({match_count} matches already loaded)")
+            update_matches(db)
     except Exception as e:
-        logger.error(f"Startup sync failed: {e}")
         import traceback
         traceback.print_exc()
     finally:
@@ -140,7 +133,7 @@ async def startup():
     # Schedule daily sync at 03:00, scoring at 03:30 (Amsterdam time)
     scheduler.add_job(daily_sync, "cron", hour="*/2", minute=0, timezone="Europe/Amsterdam")
     scheduler.start()
-    logger.info("Scheduler started. Daily sync at 03:00 Amsterdam time.")
+
 
 
 # ── OAuth callback ────────────────────────────────────────────────────────────
@@ -154,7 +147,6 @@ async def oauth_callback(request: Request):
     try:
         profile = await exchange_code_for_user(code)
     except Exception as e:
-        logger.error(f"OAuth exchange failed: {e}")
         return RedirectResponse("/")
 
     db = SessionLocal()
