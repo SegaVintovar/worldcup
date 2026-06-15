@@ -149,5 +149,6 @@ def select_match(match: Match, current_user: User, container):
                 return
             save_prediction(current_user, match, home_score, away_score, selected_winner["value"])
             ui.notify("Prediction saved!", color="positive")
+            ui.navigate.reload()
 
         ui.button("Save", on_click=on_save).props("dense").classes("mt-1 w-full bg-blue-500 text-white")

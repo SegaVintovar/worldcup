@@ -1,6 +1,6 @@
 import os
 import logging
-from nicegui import ui, app
+from nicegui import ui, app, Client
 from fastapi import Request
 from fastapi.responses import RedirectResponse
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -53,6 +53,9 @@ def daily_sync() -> None:
     update_user_scores()
 
     LAST_SYNC = datetime.now(timezone.utc)
+
+    for client in Client.instances.values():
+        ui.run_javascript('location.reload()', client=client)
 
 # ── Startup ───────────────────────────────────────────────────────────────────
 
