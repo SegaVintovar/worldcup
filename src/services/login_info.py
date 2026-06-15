@@ -36,9 +36,9 @@ def login_info(user: User):
         with ui.column():
             ui.label("Predictions").classes("text-3xl h-full font-bold mb-1 justify-center").style("padding-top: 1rem;")
             with ui.row().style("padding: 1.3em; display: flex; width: 100%; justify-content: space-between; flex-wrap: nowrap;"):
-                ui.label("Matches").style("font-size: 1.4em; font-weight: bold;")
-                ui.label("Score").style("font-size: 1.4em; font-weight: bold;")
-                ui.label("Point Earned").style("font-size: 1.4em; font-weight: bold;")
+                ui.label("Matches").style("font-size: 1.4em; font-weight: bold; width:50%")
+                ui.label("Score").style("font-size: 1.4em; font-weight: bold; width: 25%;")
+                ui.label("Points Earned").style("font-size: 1.4em; font-weight: bold; width:25%;")
             with ui.element('div').style(
                     'width: 100%; height: 66.66%; overflow-y: auto; border: 1px solid black; padding: 10px; border-radius: 10px;'):
                 if prd == []:
