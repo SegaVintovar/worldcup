@@ -192,6 +192,7 @@ def sync_matches_to_db(db) -> None:
                 home_score = m["home_score"],
                 away_score = m["away_score"],
                 played     = m["finished"],
+                # winner     = m["winner"]
             ))
             new_count += 1
 
