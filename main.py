@@ -18,6 +18,12 @@ from src.services.auth import exchange_code_for_user
 from src.services.header import header
 from src.services.scoring import update_prediction_scores, update_user_scores
 
+# assets
+from src.assets.style import apply_global_styles
+
+
+apply_global_styles()
+
 # outsourced
 from src.results.football_api import sync_matches_to_db, update_matches
 
