@@ -53,6 +53,6 @@ def calculate_rankings() -> list[dict]:
                 }
             totals[uid]["p_score"] += p.points_earned
 
-        return sorted(totals.values(), key=lambda x: x["total_points"], reverse=True)
+        return sorted(totals.values(), key=lambda x: x["p_score"], reverse=True)
     finally:
         db.close()
