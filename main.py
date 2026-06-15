@@ -101,12 +101,15 @@ def daily_sync() -> None:
 
     db = SessionLocal()
     try:
-        sync_matches_to_db(db)
+        match_count = db.query(Match).count()
+        if match_count == 0:
+            sync_matches_to_db(db)
+        else:
+            update_matches(db)
+        print("sync and update was done", flush=True)
     finally:
         db.close()
     score_predictions()
-
-
 
 # ── Startup ───────────────────────────────────────────────────────────────────
 
@@ -117,7 +120,6 @@ async def startup():
     try:
         match_count = db.query(Match).count()
         if match_count == 0:
-            
             sync_matches_to_db(db)
         else:
             update_matches(db)
@@ -130,8 +132,8 @@ async def startup():
     # Score any predictions that were left unscored (e.g. after a restart)
     score_predictions()
 
-    # Schedule daily sync at 03:00, scoring at 03:30 (Amsterdam time)
-    scheduler.add_job(daily_sync, "cron", hour="*/2", minute=0, timezone="Europe/Amsterdam")
+    # Schedule every 2 hours
+    scheduler.add_job(daily_sync, "cron", hour="*/1", minute=0, timezone="Europe/Amsterdam")
     scheduler.start()
 
 

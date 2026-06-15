@@ -27,6 +27,6 @@ def header(active_path: str = "") -> None:
                 ).classes(css_leaderboard)
 
                 ui.button(
-                    "My Predictions",
+                    "Make Prediction",
                     on_click=lambda: ui.navigate.to('/predict', new_tab=False)
-                ).classes(css_predict)
+                ).classes(css_predict).style("background: green")
