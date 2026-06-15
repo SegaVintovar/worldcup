@@ -5,6 +5,9 @@ PSQL = docker exec -it predictor_db psql \
 run:
 	docker compose up --build
 
+logs:
+	docker compose logs -f
+
 # ── Show tables ─────────────────────────────────────────────────────────────
 
 show-users:
