@@ -4,6 +4,7 @@ from nicegui import ui, app
 from fastapi import Request
 from fastapi.responses import RedirectResponse
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from datetime import datetime, timezone
 
 # pages
 from src.pages.login import login_page
@@ -15,83 +16,21 @@ from src.pages.dashboard import dashboard_page
 from src.services.database import init_db, SessionLocal, User, Match, Prediction
 from src.services.auth import exchange_code_for_user
 from src.services.header import header
+from src.services.scoring import update_prediction_scores, update_user_scores
 
 # outsourced
 from src.results.football_api import sync_matches_to_db, update_matches
 
+from zoneinfo import ZoneInfo
+
+AMSTERDAM = ZoneInfo("Europe/Amsterdam")
 
 
 DEV_MODE = os.environ.get("DEV_MODE", "false").lower() == "true"
 
+LAST_SYNC = None
+
 scheduler = AsyncIOScheduler()
-
-
-# ── Scoring logic ─────────────────────────────────────────────────────────────
-
-def score_predictions() -> None:
-    """
-    For every prediction on a finished match that hasn't been scored yet,
-    calculate points and update the prediction + the user's total score.
-
-    Points:
-        3 — exact score (e.g. predicted 2-1, result 2-1)
-        1 — correct winner / draw (e.g. predicted 2-0, result 3-0)
-        0 — wrong
-    """
-    db = SessionLocal()
-    try:
-        # Only look at predictions for matches that are now finished
-        # and where points_earned is still 0 AND the match has a real result
-        unscored = (
-            db.query(Prediction)
-            .join(Match)
-            .filter(
-                Match.played == True,
-                Match.home_score != None,
-                Match.away_score != None,
-                Prediction.points_earned == 0,
-            )
-            .all()
-        )
-
-        if not unscored:
-            
-            return
-
-        users_to_update: dict[int, int] = {}  # user_id -> extra points
-
-        for pred in unscored:
-            match = pred.match
-            ph, pa = pred.pred_home_score, pred.pred_away_score
-            rh, ra = match.home_score, match.away_score
-
-            if ph == rh and pa == ra:
-                pts = 3  # exact score
-            elif (ph - pa) == (rh - ra):
-                pts = 1  # correct draw (0-0 predicted, 0-0 result handled above)
-            elif (ph > pa) == (rh > ra):
-                pts = 1  # correct winner
-            else:
-                pts = 0
-
-            pred.points_earned = pts
-            users_to_update[pred.user_id] = users_to_update.get(pred.user_id, 0) + pts
-
-        # Bulk-update user scores
-        for user_id, extra in users_to_update.items():
-            user = db.query(User).filter_by(id=user_id).first()
-            if user:
-                user.p_score = (user.p_score or 0) + extra
-
-        db.commit()
-
-
-    except Exception as e:
-        db.rollback()
-        import traceback
-        traceback.print_exc()
-    finally:
-        db.close()
 
 
 # ── Daily sync job ────────────────────────────────────────────────────────────
@@ -99,6 +38,7 @@ def score_predictions() -> None:
 def daily_sync() -> None:
     """Sync matches from the API, then score any newly finished ones."""
 
+    global LAST_SYNC
     db = SessionLocal()
     try:
         match_count = db.query(Match).count()
@@ -109,7 +49,10 @@ def daily_sync() -> None:
         print("sync and update was done", flush=True)
     finally:
         db.close()
-    score_predictions()
+    update_prediction_scores()
+    update_user_scores()
+
+    LAST_SYNC = datetime.now(timezone.utc)
 
 # ── Startup ───────────────────────────────────────────────────────────────────
 
@@ -129,11 +72,10 @@ async def startup():
     finally:
         db.close()
 
-    # Score any predictions that were left unscored (e.g. after a restart)
-    score_predictions()
-
-    # Schedule every 2 hours
-    scheduler.add_job(daily_sync, "cron", hour="*/1", minute=0, timezone="Europe/Amsterdam")
+    update_prediction_scores()
+    update_user_scores()
+    # Schedule daily sync at 03:00, scoring at 03:30 (Amsterdam time)
+    scheduler.add_job(daily_sync, "cron", hour="*/2", minute=0, timezone="Europe/Amsterdam")
     scheduler.start()
 
 
