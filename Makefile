@@ -39,3 +39,7 @@ reset-db:
 	@echo "Waiting for DB to be ready..."
 	@sleep 3
 	docker compose up -d predictor_app
+
+
+app-reload:
+	docker compose up -d --no-deps --build app
