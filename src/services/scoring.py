@@ -7,52 +7,96 @@ Scoring rules (adjust to your taste):
 - Correct winner only:  1 point
 - Wrong:                0 points
 """
-from src.services.database import SessionLocal, Prediction, Match
+from src.services.database import SessionLocal, Prediction, Match, User
 
 
-def score_prediction(predicted_home: int, predicted_away: int,
-                     actual_home: int, actual_away: int) -> int:
-    if predicted_home == actual_home and predicted_away == actual_away:
-        return 5
-    if (predicted_home - predicted_away) == (actual_home - actual_away):
+def score_prediction(predicted_home: int, predicted_away: int, actual_home: int, actual_away: int,
+) -> int:
+    # exact score
+    if (
+        predicted_home == actual_home
+        and predicted_away == actual_away
+    ):
         return 3
-    pred_winner = _winner(predicted_home, predicted_away)
-    real_winner = _winner(actual_home, actual_away)
-    if pred_winner == real_winner:
+
+    # correct outcome
+    if (
+        winner(predicted_home, predicted_away)
+        == winner(actual_home, actual_away)
+    ):
         return 1
+
     return 0
 
 
-def _winner(home: int, away: int) -> str:
-    if home > away:   return "home"
-    if away > home:   return "away"
+def winner(home: int, away: int) -> str:
+    if home > away:
+        return "home"
+    if away > home:
+        return "away"
     return "draw"
 
-
-def calculate_rankings() -> list[dict]:
-    """
-    Returns a list of {login, display_name, avatar_url, total_points}
-    sorted by total_points descending.
-    """
+def update_prediction_scores() -> None:
     db = SessionLocal()
+
     try:
-        predictions = (
-            db.query(Prediction)
-            .join(Prediction.match)
-            .filter(Match.home_score.isnot(None))  # only scored matches
+        finished_matches = (
+            db.query(Match)
+            .filter(Match.played == True)
             .all()
         )
-        totals: dict[int, dict] = {}
-        for p in predictions:
-            uid = p.user_id
-            if uid not in totals:
-                totals[uid] = {
-                    "login":        p.user.login_42,
-                    "avatar_url":   p.user.avatar_url,
-                    "p_score": 0,
-                }
-            totals[uid]["p_score"] += p.points_earned
 
-        return sorted(totals.values(), key=lambda x: x["total_points"], reverse=True)
+        for match in finished_matches:
+
+            for prediction in match.predictions:
+
+                prediction.points_earned = score_prediction(
+                    prediction.pred_home_score,
+                    prediction.pred_away_score,
+                    match.home_score,
+                    match.away_score,
+                )
+
+        db.commit()
+
+    finally:
+        db.close()
+
+def update_user_scores() -> None:
+    db = SessionLocal()
+
+    try:
+        users = db.query(User).all()
+
+        for user in users:
+            user.p_score = sum(
+                prediction.points_earned
+                for prediction in user.predictions
+            )
+
+        db.commit()
+
+    finally:
+        db.close()
+
+def calculate_rankings() -> list[dict]:
+    db = SessionLocal()
+
+    try:
+        users = (
+            db.query(User)
+            .order_by(User.p_score.desc())
+            .all()
+        )
+
+        return [
+            {
+                "login": user.login_42,
+                "avatar_url": user.avatar_url,
+                "p_score": user.p_score,
+            }
+            for user in users
+        ]
+
     finally:
         db.close()
