@@ -8,9 +8,9 @@ def info_prd(prd: list[Prediction]):
     text_style: str = 'text-align: center; width: 33.3%; font-size: 1em;'
     for p in prd:
         with ui.row().style("display: flex; width: 100%; justify-content: space-between; flex-wrap: nowrap"):
-            ui.label(f"{p.match.home_team}-{p.match.away_team}").style(text_style)
-            ui.label(f"{p.pred_home_score}:{p.pred_away_score}").style(text_style)
-            ui.label(p.points_earned).style(text_style)
+            ui.label(f"{p.match.home_team} - {p.match.away_team}").style(text_style + 'width:50%')
+            ui.label(f"{p.pred_home_score}:{p.pred_away_score}").style(text_style + 'width:25%')
+            ui.label(p.points_earned).style(text_style + 'width:25%')
 
 
 def login_info(user: User):

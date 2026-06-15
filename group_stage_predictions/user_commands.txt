@@ -1,4 +1,0 @@
-
-chmod +x /home/sbonevel/worldcup/group_stage_predictions/predict.sh
-
-echo -e "\nalias wcupgroups='python3 /sgoinfre/sbonevel/worldcup/group_stage_predictions/wc_groups.py'" >> ~/.zshrc && source ~/.zshrc

@@ -51,7 +51,7 @@ def calculate_rankings() -> list[dict]:
                     "avatar_url":   p.user.avatar_url,
                     "p_score": 0,
                 }
-            totals[uid]["total_points"] += p.points_earned
+            totals[uid]["p_score"] += p.points_earned
 
         return sorted(totals.values(), key=lambda x: x["total_points"], reverse=True)
     finally:

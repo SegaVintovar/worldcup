@@ -138,7 +138,7 @@ async def startup():
     score_predictions()
 
     # Schedule daily sync at 03:00, scoring at 03:30 (Amsterdam time)
-    scheduler.add_job(daily_sync, "cron", hour=3, minute=0, timezone="Europe/Amsterdam")
+    scheduler.add_job(daily_sync, "cron", hour="*/2", minute=0, timezone="Europe/Amsterdam")
     scheduler.start()
     logger.info("Scheduler started. Daily sync at 03:00 Amsterdam time.")
 
