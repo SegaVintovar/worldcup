@@ -1,0 +1,9 @@
+add following lines to the docker compose, so we will get an encryption
+
+
+# docker-compose.yml addition
+certbot:
+  image: certbot/certbot
+  volumes:
+    - ./certbot/conf:/etc/letsencrypt
+    - ./certbot/www:/var/www/certbot
