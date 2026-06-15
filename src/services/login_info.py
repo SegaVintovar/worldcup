@@ -22,9 +22,10 @@ def login_info(user: User):
         ava = user.avatar_url
     else:
         ava = '/assets/image.png'
-    with ui.row().style("width: 100%; justify-content: center; border: 1px;"):
-        with ui.column().classes('p-3 items-center justify-center'):
-            with ui.card():
+    with ui.card():
+        with ui.row().style("width: 100%; justify-content: center; border: 1px;"):
+            with ui.column().classes('p-3 items-center justify-center'):
+                
                 with ui.column().classes('items-center gap-4 p-4'):
                     with ui.element('div').style('width: 15em; height: 15em; overflow: hidden; border-radius: 50%;'):
                         ui.image(ava).style('width: 100%; height: 100%; object-fit: cover;')
@@ -33,18 +34,18 @@ def login_info(user: User):
                 # with ui.element('div').classes('p-3 items-center justify-center'):
                 #     ui.image(ava).classes('mx-auto rounded-full object-cover').style('width: 15em; height: 15em')
                 # ui.label(f"Username: {user.login_42}").classes('w-full h-full font-semibold text-2xl m-20 leading-tight')
-        with ui.column():
-            ui.label("Predictions").classes("text-3xl h-full font-bold mb-1 justify-center").style("padding-top: 1rem;")
-            with ui.row().style("padding: 1.3em; display: flex; width: 100%; justify-content: space-between; flex-wrap: nowrap;"):
-                ui.label("Matches").style("font-size: 1.4em; font-weight: bold; width:50%")
-                ui.label("Score").style("font-size: 1.4em; font-weight: bold; width: 25%;")
-                ui.label("Points Earned").style("font-size: 1.4em; font-weight: bold; width:25%;")
-            with ui.element('div').style(
-                    'width: 100%; height: 66.66%; overflow-y: auto; border: 1px solid black; padding: 10px; border-radius: 10px;'):
-                if prd == []:
-                    ui.label("No Predictions").style('font-size: 1.4em; text-align: center;')
-                else:
-                    info_prd(prd)
+            with ui.column():
+                ui.label("Predictions").classes("text-3xl h-full font-bold mb-1 justify-center").style("padding-top: 1rem;")
+                with ui.row().style("padding: 1.3em; display: flex; width: 100%; justify-content: space-between; flex-wrap: nowrap;"):
+                    ui.label("Matches").style("font-size: 1.4em; font-weight: bold; width:50%")
+                    ui.label("Score").style("font-size: 1.4em; font-weight: bold; width: 25%;")
+                    ui.label("Points Earned").style("font-size: 1.4em; font-weight: bold; width:25%;")
+                with ui.element('div').style(
+                        'width: 100%; height: 66.66%; overflow-y: auto; border: 1px solid black; padding: 10px; border-radius: 10px;'):
+                    if prd == []:
+                        ui.label("No Predictions").style('font-size: 1.4em; text-align: center;')
+                    else:
+                        info_prd(prd)
     db.close()
 
 

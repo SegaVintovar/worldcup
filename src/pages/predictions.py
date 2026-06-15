@@ -24,6 +24,8 @@ from src.services.prediction_components import (
 def predictions_page(current_user: User):
     header("/predict")
 
+    ui.query('.nicegui-content').style('background-color: #F5EAD8')
+
     upcoming, _ = get_split_matches()
     pred_available = get_matches_without_predictions(current_user, upcoming)
 
