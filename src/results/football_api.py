@@ -1,59 +1,30 @@
 """
 services/football_api.py
 
-Fetches World Cup 2026 fixtures and results using two free sources:
-  - openfootball/worldcup.json  → fixtures (structure, dates, teams)
-  - TheSportsDB                 → results (scores after matches finish)
-
-No API key required for either source.
+Fetches World Cup 2026 fixtures and results using openfootball/worldcup.json
 """
 
 import requests
 import logging
 from datetime import datetime, timezone, timedelta
 
-
 logger = logging.getLogger(__name__)
-
-# ── Sources ────────────────────────────────────────────────────────────────────
 
 OPENFOOTBALL_URL = (
     "https://raw.githubusercontent.com/openfootball/worldcup.json"
     "/master/2026/worldcup.json"
 )
 
-THESPORTSDB_URL = "https://www.thesportsdb.com/api/v1/json/1/eventsseason.php"
-THESPORTSDB_LEAGUE_ID = "4429"   # FIFA World Cup on TheSportsDB
-
-# ── Fetch raw data ─────────────────────────────────────────────────────────────
+# ── Fetch ──────────────────────────────────────────────────────────────────────
 
 def _fetch_openfootball() -> list[dict]:
-    """Returns list of raw match dicts from openfootball."""
     try:
         response = requests.get(OPENFOOTBALL_URL, timeout=10)
         response.raise_for_status()
-        data = response.json()
-        return data.get("matches", [])
+        return response.json().get("matches", [])
     except Exception as e:
         logger.error(f"openfootball fetch failed: {e}")
         return []
-
-
-def _fetch_thesportsdb() -> list[dict]:
-    """Returns list of raw event dicts from TheSportsDB."""
-    try:
-        response = requests.get(
-            THESPORTSDB_URL,
-            params={"id": THESPORTSDB_LEAGUE_ID, "s": "2026"},
-            timeout=10,
-        )
-        response.raise_for_status()
-        data = response.json()
-        return data.get("events") or []
-    except Exception as e:
-        logger.error(f"TheSportsDB fetch failed: {e}")
-        return []
-
 
 # ── Normalize ──────────────────────────────────────────────────────────────────
 
@@ -62,13 +33,10 @@ def _parse_kickoff(date_str: str, time_str: str) -> datetime | None:
         parts = time_str.split(" ")
         time_clean = parts[0]
         offset_str = parts[1] if len(parts) > 1 else "UTC"
-
         dt = datetime.strptime(f"{date_str} {time_clean}", "%Y-%m-%d %H:%M")
-
         offset_hours = 0 if offset_str == "UTC" else int(offset_str.replace("UTC", ""))
         offset = timezone(timedelta(hours=offset_hours))
         return dt.replace(tzinfo=offset).astimezone(timezone.utc)
-
     except Exception:
         return None
 
@@ -83,7 +51,6 @@ def _compute_winner(home_team, away_team, home_score, away_score):
 
 def _normalize_openfootball(raw: list[dict]) -> list[dict]:
     matches = []
-
     for m in raw:
         date = m.get("date", "")
         time = m.get("time", "00:00 UTC")
@@ -117,55 +84,12 @@ def _normalize_openfootball(raw: list[dict]) -> list[dict]:
             "away_score":   away_score,
             "finished":     finished,
         })
-
     return matches
 
-
-def _normalize_thesportsdb(raw: list[dict]) -> dict[str, dict]:
-    results = {}
-    for e in raw:
-        home = e.get("strHomeTeam", "")
-        away = e.get("strAwayTeam", "")
-        date = e.get("dateEvent", "")
-        home_score = e.get("intHomeScore")
-        away_score = e.get("intAwayScore")
-
-        if home_score is None or away_score is None:
-            continue
-
-        key = f"{home}_vs_{away}_{date}".replace(" ", "_").lower()
-        results[key] = {
-            "home_score": int(home_score),
-            "away_score": int(away_score),
-            "finished":   True,
-        }
-    return results
-
-
-# ── Merge ──────────────────────────────────────────────────────────────────────
+# ── Public ─────────────────────────────────────────────────────────────────────
 
 def get_worldcup_matches() -> list[dict]:
-    """
-    Main function. Returns a merged list of all World Cup 2026 matches.
-
-    Strategy:
-      1. Use openfootball as the base (fixtures + basic scores)
-      2. Overlay TheSportsDB scores where available (usually faster/more reliable)
-    """
-    logger.info("Fetching World Cup 2026 fixtures from openfootball...")
-    matches = _normalize_openfootball(_fetch_openfootball())
-
-    logger.info("Fetching results from TheSportsDB...")
-    sportsdb_results = _normalize_thesportsdb(_fetch_thesportsdb())
-
-    for match in matches:
-        if match["source_id"] in sportsdb_results:
-            match.update(sportsdb_results[match["source_id"]])
-            logger.debug(f"Score updated from TheSportsDB: {match['source_id']}")
-
-    logger.info(f"Total matches loaded: {len(matches)}")
-    return matches
-
+    return _normalize_openfootball(_fetch_openfootball())
 
 # ── DB Sync ────────────────────────────────────────────────────────────────────
 
@@ -177,23 +101,15 @@ def sync_matches_to_db(db) -> None:
 
     for m in matches:
         existing = db.query(Match).filter_by(source_id=m["source_id"]).first()
-
-        winner = _compute_winner(
-            m["home_team"],
-            m["away_team"],
-            m["home_score"],
-            m["away_score"]
-        )
+        winner = _compute_winner(m["home_team"], m["away_team"], m["home_score"], m["away_score"])
 
         if existing:
-            # always keep DB consistent if new data arrives
             if m["finished"]:
                 existing.home_score = m["home_score"]
                 existing.away_score = m["away_score"]
                 existing.played = True
                 existing.winner = winner
                 updated_count += 1
-
         else:
             db.add(Match(
                 source_id  = m["source_id"],
@@ -225,23 +141,14 @@ def update_matches(db) -> None:
             continue
 
         changed = False
+        new_winner = _compute_winner(match.home_team, match.away_team, external["home_score"], external["away_score"])
 
-        new_winner = _compute_winner(
-            match.home_team,
-            match.away_team,
-            external["home_score"],
-            external["away_score"]
-        )
-
-        # First time match becomes finished
         if external["finished"] and not match.played:
             match.played = True
             match.home_score = external["home_score"]
             match.away_score = external["away_score"]
             match.winner = new_winner
             changed = True
-
-        # Score correction / update
         elif match.played and (
             match.home_score != external["home_score"]
             or match.away_score != external["away_score"]
