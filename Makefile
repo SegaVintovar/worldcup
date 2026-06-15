@@ -3,11 +3,10 @@ PSQL = docker exec -it predictor_db psql \
 	-d $$(grep POSTGRES_DB .env | cut -d= -f2)
 
 run:
-	@if [ ! -d ".venv" ]; then \
-		echo "No .venv found, creating..."; \
-		python3 -m venv .venv; \
-	fi
 	docker compose up --build
+
+logs:
+	docker compose logs -f
 
 # ── Show tables ─────────────────────────────────────────────────────────────
 
