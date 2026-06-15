@@ -163,3 +163,5 @@ def update_matches(db) -> None:
 
     db.commit()
     logger.info(f"Updated {updated_count} matches.")
+
+    
