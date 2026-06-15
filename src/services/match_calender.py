@@ -53,7 +53,8 @@ def build_match_calendar():
                             if match.winner:
                                 ui.label(f'Winner: {match.winner}') \
                                     .classes('text-xs text-gray-400 m-0 leading-tight')
-
+                            elif match.stage:
+                                ui.label(match.stage).classes('text-xs text-gray-400 m-0 leading-tight')
             else:
                 ui.label('No finished matches yet').classes('text-gray-500 italic')
 
