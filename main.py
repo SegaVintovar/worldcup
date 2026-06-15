@@ -1,6 +1,6 @@
 import os
 import logging
-from nicegui import ui, app
+from nicegui import ui, app, Client
 from fastapi import Request
 from fastapi.responses import RedirectResponse
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -54,6 +54,9 @@ def daily_sync() -> None:
 
     LAST_SYNC = datetime.now(timezone.utc)
 
+    for client in Client.instances.values():
+        ui.run_javascript('location.reload()', client=client)
+
 # ── Startup ───────────────────────────────────────────────────────────────────
 
 @app.on_startup
@@ -75,7 +78,7 @@ async def startup():
     update_prediction_scores()
     update_user_scores()
     # Schedule daily sync at 03:00, scoring at 03:30 (Amsterdam time)
-    scheduler.add_job(daily_sync, "cron", hour="*/2", minute=0, timezone="Europe/Amsterdam")
+    scheduler.add_job(daily_sync, "cron", hour="*/1", minute=0, timezone="Europe/Amsterdam")
     scheduler.start()
 
 
