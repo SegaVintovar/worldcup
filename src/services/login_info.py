@@ -1,50 +1,66 @@
-
-
 from nicegui import ui
 from src.services.database import User, Prediction, SessionLocal
 
 
 def info_prd(prd: list[Prediction]):
-    text_style: str = 'text-align: center; width: 33.3%; font-size: 1em;'
     for p in prd:
-        with ui.row().style("display: flex; width: 100%; justify-content: space-between; flex-wrap: nowrap"):
-            ui.label(f"{p.match.home_team} - {p.match.away_team}").style(text_style + 'width:50%')
-            ui.label(f"{p.pred_home_score}:{p.pred_away_score}").style(text_style + 'width:25%')
-            ui.label(p.points_earned).style(text_style + 'width:25%')
+        with ui.card():
+            with ui.row().style(
+                "width: 100%; justify-content: space-between; "
+                "padding: 6px 0; border-bottom: 1px solid #eee;"
+            ):
+                
+                    # Match + time (assuming match has datetime or kickoff)
+                    ui.label(f"{p.match.home_team} vs {p.match.away_team}") \
+                        .style("width: 45%; font-size: 0.95em;")
+
+                    ui.label(f"{p.pred_home_score}:{p.pred_away_score}") \
+                        .style("width: 20%; text-align: center;")
+
+                    ui.label(str(p.points_earned)) \
+                        .style("width: 15%; text-align: right;")
+
 
 
 def login_info(user: User):
-    ava: str
-
     db = SessionLocal()
-    prd = db.query(Prediction).filter(Prediction.user_id == user.id).all()
-    if user.avatar_url:
-        ava = user.avatar_url
-    else:
-        ava = '/assets/image.png'
-    with ui.row().style("width: 100%; justify-content: center; border: 1px;"):
-        with ui.column().classes('p-3 items-center justify-center'):
-            with ui.card():
-                with ui.column().classes('items-center gap-4 p-4'):
-                    with ui.element('div').style('width: 15em; height: 15em; overflow: hidden; border-radius: 50%;'):
-                        ui.image(ava).style('width: 100%; height: 100%; object-fit: cover;')
-                    ui.label(f"Username: {user.login_42}").classes('font-semibold text-2xl text-center')
-                
-                # with ui.element('div').classes('p-3 items-center justify-center'):
-                #     ui.image(ava).classes('mx-auto rounded-full object-cover').style('width: 15em; height: 15em')
-                # ui.label(f"Username: {user.login_42}").classes('w-full h-full font-semibold text-2xl m-20 leading-tight')
-        with ui.column():
-            ui.label("Predictions").classes("text-3xl h-full font-bold mb-1 justify-center").style("padding-top: 1rem;")
-            with ui.row().style("padding: 1.3em; display: flex; width: 100%; justify-content: space-between; flex-wrap: nowrap;"):
-                ui.label("Matches").style("font-size: 1.4em; font-weight: bold; width:50%")
-                ui.label("Score").style("font-size: 1.4em; font-weight: bold; width: 25%;")
-                ui.label("Points Earned").style("font-size: 1.4em; font-weight: bold; width:25%;")
-            with ui.element('div').style(
-                    'width: 100%; height: 66.66%; overflow-y: auto; border: 1px solid black; padding: 10px; border-radius: 10px;'):
-                if prd == []:
-                    ui.label("No Predictions").style('font-size: 1.4em; text-align: center;')
-                else:
-                    info_prd(prd)
-    db.close()
+    prd = db.query(Prediction)\
+        .filter(Prediction.user_id == user.id)\
+        .order_by(Prediction.id.desc())\
+        .limit(5)\
+        .all()
 
+    avatar = user.avatar_url or '/assets/image.png'
+    with ui.column().style("width: 100%; align-items: center;"):
+        with ui.card().style(
+            "border-radius: 12px; padding: 20px; width: 80%; height: 50%;"
+            "box-shadow: 0 2px 10px rgba(0,0,0,0.08);"
+        ):
+            with ui.row().style("width: 100%; gap: 30px;"):
 
+                # LEFT SIDE
+                with ui.column().style("flex: 1; align-items: center;"):
+                    ui.image(avatar).style(
+                        "width: 200px; height: 200px; border-radius: 50%; object-fit: cover;"
+                    )
+
+                    ui.label(user.login_42).classes("text-xl font-bold mt-2")
+
+                    ui.label(f"Prediction Score: {user.p_score}") \
+                        .style("font-size: 1.1em; color: #666;")
+
+                # RIGHT SIDE
+                with ui.column().style("flex: 2;"):
+                    ui.label("Recent predictions") \
+                        .classes("text-xl font-bold mb-2")
+
+                    with ui.column().style(
+                        "border: 1px solid #eee; border-radius: 10px; "
+                        "padding: 10px; max-height: 250px; overflow-y: auto;"
+                    ):
+                        if not prd:
+                            ui.label("No predictions yet")
+                        else:
+                            info_prd(prd)
+
+        db.close()

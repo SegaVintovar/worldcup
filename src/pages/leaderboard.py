@@ -6,6 +6,7 @@ from src.services.header import header
 
 def leaderboard_page():
     header("/leaderboard")
+    ui.query('.nicegui-content').style('background-color: #F5EAD8')
     ui.label("🏆 Leaderboard").classes("text-3xl font-bold mb-6")
     
     rankings = calculate_rankings()
