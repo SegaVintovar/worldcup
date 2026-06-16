@@ -7,17 +7,28 @@ from src.services.database import SessionLocal, Match, Prediction, User
 
 AMSTERDAM = ZoneInfo("Europe/Amsterdam")
 
+PREDICTION_LIMITS = False  # False = allow late predictions (debug/admin mode)
+
 
 def get_matches_without_predictions(current_user: User, matches: list[Match]) -> list[Match]:
     db = SessionLocal()
     now = datetime.now(AMSTERDAM)
+
     try:
         available: list[Match] = []
+
         for match in matches:
-            # Drop matches that have already kicked off
-            match_time = match.match_date.astimezone(AMSTERDAM)
-            if match_time <= now:
-                continue
+
+            # Production mode: no predictions after kickoff
+            if PREDICTION_LIMITS:
+                match_time = match.match_date.astimezone(AMSTERDAM)
+
+                if match.played:
+                    continue
+
+                if match_time <= now:
+                    continue
+
             prediction = (
                 db.query(Prediction)
                 .filter(
@@ -26,9 +37,12 @@ def get_matches_without_predictions(current_user: User, matches: list[Match]) ->
                 )
                 .first()
             )
+
             if prediction is None:
                 available.append(match)
+
         return available
+
     finally:
         db.close()
 
@@ -68,14 +82,22 @@ def get_finished_predictions(current_user: User):
 def get_upcoming_predictions(current_user: User) -> list[tuple[Match, Prediction]]:
     db = SessionLocal()
     try:
-        return (
+        query = (
             db.query(Match, Prediction)
             .join(Prediction, Prediction.match_id == Match.id)
-            .filter(Prediction.user_id == current_user.id, Match.played == False)
+            .filter(Prediction.user_id == current_user.id)
+        )
+
+        if PREDICTION_LIMITS:
+            query = query.filter(Match.played == False)
+
+        return (
+            query
             .order_by(Match.match_date.asc())
             .limit(5)
             .all()
         )
+
     finally:
         db.close()
 
