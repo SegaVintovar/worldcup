@@ -46,7 +46,7 @@ def header(active_path: str = "") -> None:
             # ── RIGHT SIDE (last sync)
             if state.LAST_SYNC:
                 ui.label(
-                    f"🕒 Updated {state.LAST_SYNC.astimezone(AMSTERDAM).strftime('%H:%M')}"
+                    f"🕒 Updated {state.LAST_SYNC.astimezone(AMSTERDAM).strftime('%d %b %H:%M')}"
                 ).classes('text-xs text-gray-200')
             else:
                 ui.label(
