@@ -17,6 +17,7 @@ from src.services.database import init_db, SessionLocal, User, Match, Prediction
 from src.services.auth import exchange_code_for_user
 from src.services.header import header
 from src.services.scoring import update_prediction_scores, update_user_scores
+from src.services import state
 
 # assets
 from src.assets.style import apply_global_styles
@@ -34,7 +35,6 @@ AMSTERDAM = ZoneInfo("Europe/Amsterdam")
 
 DEV_MODE = os.environ.get("DEV_MODE", "false").lower() == "true"
 
-LAST_SYNC = None
 
 scheduler = AsyncIOScheduler()
 
@@ -58,10 +58,11 @@ def daily_sync() -> None:
     update_prediction_scores()
     update_user_scores()
 
-    LAST_SYNC = datetime.now(timezone.utc)
+    state.LAST_SYNC = datetime.now(timezone.utc)
 
     for client in Client.instances.values():
-        ui.run_javascript('location.reload()', client=client)
+        with client:
+            ui.navigate.reload()
 
 # ── Startup ───────────────────────────────────────────────────────────────────
 

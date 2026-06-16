@@ -20,14 +20,25 @@ from src.services.prediction_components import (
     AMSTERDAM,
 )
 
+# false = no prediction limits (debug mode)
+from src.services.prediction_search import PREDICTION_LIMITS
+
 
 def predictions_page(current_user: User):
     header("/predict")
 
     ui.query('.nicegui-content').style('background-color: #F5EAD8')
 
-    upcoming, _ = get_split_matches()
-    pred_available = get_matches_without_predictions(current_user, upcoming)
+    upcoming, finished = get_split_matches()
+
+    if PREDICTION_LIMITS:
+        matches = upcoming
+    
+    else:
+        matches = upcoming + finished
+
+
+    pred_available = get_matches_without_predictions(current_user, matches)
 
     pred_ref = {"container": None}
 
