@@ -10,7 +10,8 @@ AMSTERDAM = ZoneInfo("Europe/Amsterdam")
 
 
 def header(active_path: str = "") -> None:
-    css = 'bg-green-600 text-black'
+    css = 'text-black'
+    # css_p = 'bg-green-600'
     css_predict = css if active_path == "/predict" else ""
     css_leaderboard = css if active_path == "/leaderboard" else ""
     css_dashboard = css if active_path == "/dashboard" else ""
@@ -36,9 +37,9 @@ def header(active_path: str = "") -> None:
                     ).classes(css_leaderboard)
 
                     ui.button(
-                        "My Predictions",
+                        "Make Prediction",
                         on_click=lambda: ui.navigate.to('/predict', new_tab=False)
-                    ).classes(css_predict)
+                    ).classes(css_predict).props("color=positive")
 
             # pushes everything to the right
             ui.space()

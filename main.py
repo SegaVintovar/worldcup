@@ -92,8 +92,17 @@ async def startup():
 
 # ── OAuth callback ────────────────────────────────────────────────────────────
 
+
+
 @app.get("/auth/callback")
 async def oauth_callback(request: Request):
+    # -----------------------------------
+    # CLaude part for a new get_login_url
+    state = request.query_params.get("state")
+    if not state or state != app.storage.user.get("oauth_state"):
+        return RedirectResponse("/?error=csrf")
+    app.storage.user.pop("oauth_state", None)
+    # -------------------------------------------------
     code = request.query_params.get("code")
     if not code:
         return RedirectResponse("/")

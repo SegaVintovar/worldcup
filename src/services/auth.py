@@ -11,6 +11,8 @@ How 42 OAuth works:
 import os
 import httpx
 from nicegui import app  # NiceGUI exposes a FastAPI app we attach routes to
+import secrets
+
 
 OAUTH_CLIENT_ID     = os.environ["OAUTH_CLIENT_ID"]
 OAUTH_CLIENT_SECRET = os.environ["OAUTH_CLIENT_SECRET"]
@@ -20,14 +22,26 @@ AUTHORIZE_URL = "https://api.intra.42.fr/oauth/authorize"
 TOKEN_URL     = "https://api.intra.42.fr/oauth/token"
 USER_API_URL  = "https://api.intra.42.fr/v2/me"
 
+# old one
+# def get_login_url() -> str:
+#     """Build the URL to send users to for 42 login."""
+#     return (
+#         f"{AUTHORIZE_URL}"
+#         f"?client_id={OAUTH_CLIENT_ID}"
+#         f"&redirect_uri={OAUTH_REDIRECT_URI}"
+#         f"&response_type=code"
+#     )
+
 
 def get_login_url() -> str:
-    """Build the URL to send users to for 42 login."""
+    state = secrets.token_urlsafe(32)
+    app.storage.user["oauth_state"] = state   # store in session
     return (
         f"{AUTHORIZE_URL}"
         f"?client_id={OAUTH_CLIENT_ID}"
         f"&redirect_uri={OAUTH_REDIRECT_URI}"
         f"&response_type=code"
+        f"&state={state}"
     )
 
 
