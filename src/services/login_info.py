@@ -3,20 +3,32 @@ from src.services.database import User, Prediction, SessionLocal
 
 
 def info_prd(prd: list[Prediction]):
+
+    with ui.row().style(
+        "width: 100%; justify-content: space-between; "
+        "border-bottom: 1px solid #eee;"
+    ):
+        with ui.column().style("width: 50%;"):
+            ui.label("Match").classes("text-xl font-bold mt-2")
+        with ui.column().style("width: 25%;"):
+            ui.label("Score").classes("text-xl font-bold mt-2")
+        with ui.column().style("width: 15%;"):
+            ui.label("Points Earned").classes("text-xl font-bold mt-2")
+
     for p in prd:
-        with ui.card():
+        with ui.card().style("width: 100%;"):
             with ui.row().style(
                 "width: 100%; justify-content: space-between; "
-                "padding: 6px 0; border-bottom: 1px solid #eee;"
+                "border-bottom: 1px solid #eee;"
             ):
-                
+                with ui.column().style("width: 50%;"):
                     # Match + time (assuming match has datetime or kickoff)
                     ui.label(f"{p.match.home_team} vs {p.match.away_team}") \
-                        .style("width: 45%; font-size: 0.95em;")
-
+                        .style("width: 60%; font-size: 0.95em;")
+                with ui.column().style("width: 25%;"): 
                     ui.label(f"{p.pred_home_score}:{p.pred_away_score}") \
                         .style("width: 20%; text-align: center;")
-
+                with ui.column().style("width: 15%;"):
                     ui.label(str(p.points_earned)) \
                         .style("width: 15%; text-align: right;")
 
@@ -55,14 +67,14 @@ def login_info(user: User):
                         ui.label("Recent predictions") \
                             .classes("text-xl font-bold mb-2")
 
-                        with ui.column().style(
-                            "border: 1px solid #eee; border-radius: 10px; "
-                            "padding: 10px; max-height: 250px; overflow-y: auto;"
-                        ):
-                            if not prd:
-                                ui.label("No predictions yet")
-                                ui.button("Go to Make Prediction page and predict football matches", on_click=lambda x: ui.navigate.to('/predict'))
-                            else:
-                                info_prd(prd)
+                        # with ui.column().style(
+                        #     "border: 1px solid #eee; border-radius: 10px; "
+                        #     "padding: 10px; max-height: 250px; overflow-y: auto;"
+                        # ):
+                        if not prd:
+                            ui.label("No predictions yet")
+                            ui.button("Go to Make Prediction page and predict football matches", on_click=lambda x: ui.navigate.to('/predict'))
+                        else:
+                            info_prd(prd)
     finally:
         db.close()
