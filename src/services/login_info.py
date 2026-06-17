@@ -33,7 +33,7 @@ def login_info(user: User):
     avatar = user.avatar_url or '/assets/image.png'
     with ui.column().style("width: 100%; align-items: center;"):
         with ui.card().style(
-            "border-radius: 12px; padding: 20px; width: 80%; height: 50%;"
+            "border-radius: 12px; padding: 20px; width: 100%; height: 50%;"
             "box-shadow: 0 2px 10px rgba(0,0,0,0.08);"
         ):
             with ui.row().style("width: 100%; gap: 30px;"):
@@ -60,6 +60,7 @@ def login_info(user: User):
                     ):
                         if not prd:
                             ui.label("No predictions yet")
+                            ui.button("Go to Make Prediction page and predict football matches", on_click=lambda x: ui.navigate.to('/predict'))
                         else:
                             info_prd(prd)
 
