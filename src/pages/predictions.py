@@ -42,6 +42,17 @@ def predictions_page(current_user: User):
 
     pred_ref = {"container": None}
 
+    # ── Prediction form + Rules ───────────────────────────────────────────────
+    with ui.row().classes("w-full gap-4 items-stretch"):
+        with ui.card().classes("flex-1 p-4"):
+            prediction_container = ui.column().classes("w-full")
+            pred_ref["container"] = prediction_container
+            with prediction_container:
+                ui.label("← click a match above to predict").classes("text-sm text-gray-400")
+
+        with ui.card().classes("p-3"):
+            build_rules_card()
+
     # ── Search bar ────────────────────────────────────────────────────────────
     with ui.card().classes("w-full p-3"):
         with ui.row().classes("w-full items-end gap-2"):
@@ -83,17 +94,6 @@ def predictions_page(current_user: User):
                         return lambda: select_match(m, current_user, ref["container"])
                     btn = build_match_button(match)
                     btn.on_click(make_click(match, pred_ref))
-
-    # ── Prediction form + Rules ───────────────────────────────────────────────
-    with ui.row().classes("w-full gap-4 items-stretch"):
-        with ui.card().classes("flex-1 p-4"):
-            prediction_container = ui.column().classes("w-full")
-            pred_ref["container"] = prediction_container
-            with prediction_container:
-                ui.label("← click a match above to predict").classes("text-sm text-gray-400")
-
-        with ui.card().classes("p-3"):
-            build_rules_card()
 
     # ── Finished + upcoming predictions ──────────────────────────────────────
     with ui.row().classes("w-full gap-4 mt-2 items-start"):
