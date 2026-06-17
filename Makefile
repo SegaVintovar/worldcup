@@ -3,6 +3,11 @@ PSQL = docker exec -it predictor_db psql \
 	-d $$(grep POSTGRES_DB .env | cut -d= -f2)
 
 run:
+# 	mkdir -p postgres_data
+# # 	docker run --rm -v "$(pwd)/postgres_data":/var/lib/postgresql/data alpine \
+# #   sh -c "chown -R 999:999 /var/lib/postgresql/data || true"
+# 	docker run --rm -v "$(CURDIR)/postgres_data":/var/lib/postgresql/data alpine \
+#   sh -c "chown -R 999:999 /var/lib/postgresql/data || true"
 	docker compose up --build
 
 logs:
