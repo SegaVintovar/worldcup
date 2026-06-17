@@ -6,7 +6,6 @@ from src.services.database import User
 from src.services.header import header
 
 
-
 def dashboard_page(user: User):
     header("/dashboard")
     ui.query('.nicegui-content').style('background-color: #F5EAD8')
@@ -16,7 +15,7 @@ def dashboard_page(user: User):
             ui.chat_message(('Welcome in Football Predictor app!\n',
                             'On this page you can check your prediction results',
                             'Current app status: Testing period in ON till 21st June',
-                            'On 21st the leaderboard will be nullified'),
+                            'On 21st the leaderboard will be nullified, so real challenge will start with KickOff Stage'),
                     name='sq.clubs.codam',
                     stamp='now',
                     avatar='https://robohash.org/ui')
