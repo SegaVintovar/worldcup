@@ -84,7 +84,7 @@ async def startup():
 
     update_prediction_scores()
     update_user_scores()
-    # Schedule daily sync at 03:00, scoring at 03:30 (Amsterdam time)
+    # sync every 10 min
     scheduler.add_job(daily_sync, "cron", minute="*/10", timezone="Europe/Amsterdam")
     scheduler.start()
 
