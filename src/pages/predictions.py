@@ -28,6 +28,14 @@ def predictions_page(current_user: User):
     header("/predict")
 
     ui.query('.nicegui-content').style('background-color: #F5EAD8')
+    ui.chat_message(('On this page you can make your prediction\n',
+                        'Find the match with our search bar or pick one from next 9 avaliable matches.',
+                        "\n",
+                        'Current app status: Testing period in ON till 21st June',
+                        'On 21st the leaderboard will be nullified, so real challenge will start with KickOff Stage'),
+                    name='sq.clubs.codam',
+                    stamp='now',
+                    avatar='https://robohash.org/ui')
 
     upcoming, finished = get_split_matches()
 
@@ -48,13 +56,14 @@ def predictions_page(current_user: User):
             prediction_container = ui.column().classes("w-full")
             pred_ref["container"] = prediction_container
             with prediction_container:
-                ui.label("← click a match above to predict").classes("text-sm text-gray-400")
+                ui.label("Choose a match to predict").classes("text-sm text-gray-400")
 
         with ui.card().classes("p-3"):
             build_rules_card()
 
     # ── Search bar ────────────────────────────────────────────────────────────
     with ui.card().classes("w-full p-3"):
+        ui.label("🔍 Search Bar").classes("text-xl font-bold mb-2")
         with ui.row().classes("w-full items-end gap-2"):
             home_input = ui.input(label="Home team", placeholder="e.g. Netherlands").classes("flex-1")
             away_input = ui.input(label="Away team", placeholder="e.g. Argentina").classes("flex-1")
