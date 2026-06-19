@@ -32,13 +32,7 @@ from src.services.header import header
 def leaderboard_page():
     header("/leaderboard")
     ui.query('.nicegui-content').style('background-color: #F5EAD8')
-    ui.chat_message(('Here is our leaderboard\n',
-                     'Because now we are in testing mode, the leaderboard will'
-                     ' be reseted on 21st of June\n'
-                     'I hope we will be able to provide prizes for top - 3 places'),
-                    name='sq.clubs.codam',
-                    stamp='now',
-                    avatar='https://robohash.org/ui')
+
     # Inject hover CSS once — Tailwind hover: doesn't work reliably on ui.card()
     ui.add_head_html("""
     <style>
@@ -51,6 +45,15 @@ def leaderboard_page():
     """)
 
     ui.label("🏆 Leaderboard").classes("text-3xl font-bold mb-6")
+
+    with ui.card():
+        ui.chat_message(('Here is our leaderboard\n',
+                        'Because now we are in testing mode, the leaderboard will'
+                        ' be reseted on 21st of June\n'
+                        'I hope we will be able to provide prizes for top - 3 places'),
+                        name='sq.clubs.codam',
+                        stamp='now',
+                        avatar='https://robohash.org/ui')
 
     rankings = calculate_rankings()
     if not rankings:
