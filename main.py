@@ -89,6 +89,12 @@ async def startup():
     scheduler.start()
 
 
+# --Log Out----
+@app.get("/logout")
+async def logout():
+    app.storage.user.clear()
+    return RedirectResponse("/")
+
 
 # ── OAuth callback ────────────────────────────────────────────────────────────
 

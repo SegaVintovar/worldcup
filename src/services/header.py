@@ -43,7 +43,10 @@ def header(active_path: str = "") -> None:
 
             # pushes everything to the right
             ui.space()
-
+            ui.button(
+                "Logout",
+                on_click=lambda: ui.navigate.to("/logout")
+            ).classes("ml-auto")
             # ── RIGHT SIDE (last sync)
             if state.LAST_SYNC:
                 ui.label(
