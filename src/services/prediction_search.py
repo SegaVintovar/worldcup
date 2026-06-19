@@ -7,7 +7,7 @@ from src.services.database import SessionLocal, Match, Prediction, User
 
 AMSTERDAM = ZoneInfo("Europe/Amsterdam")
 
-PREDICTION_LIMITS = False  # False = allow late predictions (debug/admin mode)
+PREDICTION_LIMITS = True  # False = allow late predictions (debug/admin mode)
 
 
 def get_matches_without_predictions(current_user: User, matches: list[Match]) -> list[Match]:
