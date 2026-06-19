@@ -2,8 +2,9 @@
 
 from nicegui import ui
 from zoneinfo import ZoneInfo
-from src.services.database import Match, User
+from src.services.database import Match, User, SessionLocal, Prediction
 from src.services.prediction_search import get_finished_matches_with_predictions, get_upcoming_predictions
+from sqlalchemy import delete
 
 AMSTERDAM = ZoneInfo("Europe/Amsterdam")
 
@@ -100,6 +101,13 @@ def build_finished_matches(current_user: User):
                     ui.label("Your pick: None").classes("text-xs text-gray-400 italic")
 
 
+def del_prediction(prediction: Prediction) -> None:
+    db = SessionLocal()
+    with db:
+        db.execute(delete(Prediction).where(Prediction.id == prediction.id))
+        db.commit()
+    # db.query(Prediction).filter(Prediction.user_id)
+
 def build_my_predictions(current_user: User):
     upcoming_predictions = get_upcoming_predictions(current_user)
 
@@ -117,6 +125,9 @@ def build_my_predictions(current_user: User):
                     ui.label(
                         f"{prediction.pred_home_score} – {prediction.pred_away_score}"
                     ).classes("text-base font-bold text-blue-700")
+                    ui.button("Delete Prediction", on_click=lambda p=prediction: (del_prediction(p),
+                                                                        ui.notify("Deleted", type="positive"),
+                                                                           dialog.close()))
                 ui.label(
                     match.match_date.astimezone(AMSTERDAM).strftime("%d %b · %H:%M")
                 ).classes("text-xs text-gray-500 mt-1")
