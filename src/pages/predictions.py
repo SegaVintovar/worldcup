@@ -22,64 +22,93 @@ from src.services.prediction_components import (
 
 # false = no prediction limits (debug mode)
 from src.services.prediction_search import PREDICTION_LIMITS
+from datetime import datetime
 
 
 def predictions_page(current_user: User):
     header("/predict")
 
     ui.query('.nicegui-content').style('background-color: #F5EAD8')
-    ui.chat_message(('On this page you can make your prediction\n',
-                        'Find the match with our search bar or pick one from next 9 avaliable matches.',
-                        "\n",
-                        'Current app status: Testing period in ON till 21st June',
-                        'On 21st the leaderboard will be nullified, so real challenge will start with KickOff Stage'),
-                    name='sq.clubs.codam',
-                    stamp='now',
-                    avatar='https://robohash.org/ui')
+    with ui.row().classes("w-full gap-4 items-stretch"):
+        with ui.card():
+            ui.chat_message((
+                'On this page you can make your prediction\n',
+                'Find the match with our search bar or pick one from next 9 avaliable matches.',
+                'Current app status: Testing period in ON till 21st June',
+                'On 21st the leaderboard will be nullified, so real challenge will start with KickOff Stage'),
+                            name='sq.clubs.codam',
+                            stamp='now',
+                            avatar='https://robohash.org/ui').classes('flex')
+
+        with ui.card().classes("flex-1 p-3"):
+            build_rules_card()
 
     upcoming, finished = get_split_matches()
 
     if PREDICTION_LIMITS:
         matches = upcoming
-    
+
     else:
         matches = upcoming + finished
 
 
     pred_available = get_matches_without_predictions(current_user, matches)
 
-    pred_ref = {"container": None}
+    # filter out matches that have already started
+    try:
+        now = datetime.now(AMSTERDAM)
+        pred_available = [m for m in pred_available if m.match_date.astimezone(AMSTERDAM) > now]
+    except Exception:
+        # if something goes wrong with timezones or match_date, fall back to original list
+        pass
 
-    # ── Prediction form + Rules ───────────────────────────────────────────────
-    with ui.row().classes("w-full gap-4 items-stretch"):
-        with ui.card().classes("flex-1 p-4"):
-            prediction_container = ui.column().classes("w-full")
-            pred_ref["container"] = prediction_container
-            with prediction_container:
-                ui.label("Choose a match to predict").classes("text-sm text-gray-400")
+    pred_ref = {
+        "container": None,
+        "selected_match": None,
+        "search_card": None,
+        "available_card": None,
+        "search_results_container": None,
+    }
 
-        with ui.card().classes("p-3"):
-            build_rules_card()
+    def on_search_select(match, container):
+        pred_ref["selected_match"] = match
+        if pred_ref.get("search_card"):
+            pred_ref["search_card"].style("display:none")
+        if pred_ref.get("available_card"):
+            pred_ref["available_card"].style("display:none")
+        if pred_ref.get("search_results_container"):
+            pred_ref["search_results_container"].style("display:none")
+        select_match(match, current_user, container, pred_ref)
+
+
+    home_input = None
+    away_input = None
+
+    ui.label("Step 1: Select the match").classes('text-xl font-bold mb-2')
 
     # ── Search bar ────────────────────────────────────────────────────────────
-    with ui.card().classes("w-full p-3"):
+    
+    search_card = ui.card().classes("w-full p-3")
+    pred_ref["search_card"] = search_card
+    with search_card:
         ui.label("🔍 Search Bar").classes("text-xl font-bold mb-2")
         with ui.row().classes("w-full items-end gap-2"):
             home_input = ui.input(label="Home team", placeholder="e.g. Netherlands").classes("flex-1")
             away_input = ui.input(label="Away team", placeholder="e.g. Argentina").classes("flex-1")
 
-            ui.button("Search", icon="search").classes("mb-1").on_click(
-                lambda: run_search(
+            def on_search_click():
+                run_search(
                     home_input.value,
                     away_input.value,
                     pred_available,
                     get_finished_matches_with_predictions(current_user),
                     get_upcoming_predictions(current_user),
                     search_results_container,
-                    lambda match, container: select_match(match, current_user, container),
+                    lambda match, container: on_search_select(match, container),
                     pred_ref,
                 )
-            )
+
+            ui.button("Search", icon="search").classes("mb-1").on_click(on_search_click)
 
         with ui.row().classes("w-full gap-2"):
             home_suggest = ui.column().classes("flex-1 gap-0")
@@ -89,20 +118,91 @@ def predictions_page(current_user: User):
     wire_autocomplete(away_input, away_suggest)
 
     search_results_container = ui.column().classes("w-full")
+    pred_ref["search_results_container"] = search_results_container
+
+    # ui.label("Or").classes('text-l font-bold mb-2')
+
 
     # ── Available matches ─────────────────────────────────────────────────────
-    with ui.card().classes("w-full p-4"):
-        ui.label("📅 Available matches").classes("text-xl font-bold mb-2")
+    # pagination state for available matches
+    page = {"num": 0, "per_page": 9}
 
-        if not pred_available:
+    def render_matches(matches_container):
+        matches_container.clear()
+        start = page["num"] * page["per_page"]
+        end = start + page["per_page"]
+        subset = pred_available[start:end]
+        if not subset:
             ui.label("No matches available to predict.").classes("text-sm text-gray-400")
-        else:
+            return
+        with matches_container:
             with ui.grid(columns=3).classes("w-full gap-2"):
-                for match in pred_available[:9]:
+                for match in subset:
                     def make_click(m, ref):
-                        return lambda: select_match(m, current_user, ref["container"])
+                        def handler():
+                            ref["selected_match"] = m
+                            if ref.get("search_card"):
+                                ref["search_card"].style("display:none")
+                            if ref.get("available_card"):
+                                ref["available_card"].style("display:none")
+                            if ref.get("search_results_container"):
+                                ref["search_results_container"].style("display:none")
+                            select_match(m, current_user, ref["container"], ref)
+
+                        return handler
+
                     btn = build_match_button(match)
                     btn.on_click(make_click(match, pred_ref))
+
+    available_card = ui.card().classes("w-full p-4")
+    pred_ref["available_card"] = available_card
+    with available_card:
+        ui.label("📅 Available matches").classes("text-xl font-bold mb-2")
+
+        matches_container = ui.column().classes("w-full")
+        pred_ref["matches_container"] = matches_container
+
+        # pagination controls
+        def go_prev():
+            if page["num"] > 0:
+                page["num"] -= 1
+                render_matches(matches_container)
+                total = max(1, (len(pred_available) + page["per_page"] - 1) // page["per_page"])
+                try:
+                    page_label.set_text(f"Page {page['num'] + 1} / {total}")
+                except Exception:
+                    pass
+
+        def go_next():
+            if (page["num"] + 1) * page["per_page"] < len(pred_available):
+                page["num"] += 1
+                render_matches(matches_container)
+                total = max(1, (len(pred_available) + page["per_page"] - 1) // page["per_page"])
+                try:
+                    page_label.set_text(f"Page {page['num'] + 1} / {total}")
+                except Exception:
+                    pass
+
+        render_matches(matches_container)
+
+        with ui.row().classes("w-full items-center justify-center gap-4 mt-2"):
+            prev_btn = ui.button("Prev").props("flat")
+            prev_btn.on_click(lambda: go_prev())
+            page_label = ui.label(f"Page {page['num'] + 1} / {max(1, (len(pred_available) + page['per_page'] - 1) // page['per_page'])}")
+            next_btn = ui.button("Next").props("flat")
+            next_btn.on_click(lambda: go_next())
+
+    ui.label("Step 2: Predict the result").classes("text-xl font-bold mb-2")
+
+     # ── Prediction form ───────────────────────────────────────────────
+    with ui.row().classes("w-full gap-4 items-stretch"):
+        with ui.card().classes("flex-1 p-4"):
+            prediction_container = ui.column().classes("w-full")
+            pred_ref["container"] = prediction_container
+            with prediction_container:
+                ui.label("Choose a match to predict").classes("text-sm text-gray-400")
+
+
 
     # ── Finished + upcoming predictions ──────────────────────────────────────
     with ui.row().classes("w-full gap-4 mt-2 items-start"):
@@ -112,7 +212,7 @@ def predictions_page(current_user: User):
 
 # ── Prediction form ───────────────────────────────────────────────────────────
 
-def select_match(match: Match, current_user: User, container):
+def select_match(match: Match, current_user: User, container, pred_ref=None):
     container.clear()
 
     with container:
@@ -172,5 +272,18 @@ def select_match(match: Match, current_user: User, container):
             save_prediction(current_user, match, home_score, away_score, selected_winner["value"])
             ui.notify("Prediction saved!", color="positive")
             ui.navigate.reload()
+        def on_cancel():
+            if pred_ref is not None:
+                pred_ref["selected_match"] = None
+                if pred_ref.get("search_card"):
+                    pred_ref["search_card"].style("display:block")
+                if pred_ref.get("available_card"):
+                    pred_ref["available_card"].style("display:block")
+                if pred_ref.get("search_results_container"):
+                    pred_ref["search_results_container"].style("display:block")
+            container.clear()
+            with container:
+                ui.label("Choose a match to predict").classes("text-sm text-gray-400")
 
+        ui.button("Cancel", on_click=on_cancel).props("flat").classes("mt-1 w-full")
         ui.button("Save", on_click=on_save).props("dense").classes("mt-1 w-full bg-blue-500 text-white")
