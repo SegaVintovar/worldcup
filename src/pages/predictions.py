@@ -193,10 +193,12 @@ def predictions_page(current_user: User):
             next_btn.on_click(lambda: go_next())
 
     ui.label("Step 2: Predict the result").classes("text-xl font-bold mb-2")
-
+    
      # ── Prediction form ───────────────────────────────────────────────
     with ui.row().classes("w-full gap-4 items-stretch"):
         with ui.card().classes("flex-1 p-4"):
+            # anchor for scrolling into view when a match is selected
+            ui.html('<div id="prediction_anchor"></div>')
             prediction_container = ui.column().classes("w-full")
             pred_ref["container"] = prediction_container
             with prediction_container:
@@ -287,3 +289,8 @@ def select_match(match: Match, current_user: User, container, pred_ref=None):
 
         ui.button("Cancel", on_click=on_cancel).props("flat").classes("mt-1 w-full")
         ui.button("Save", on_click=on_save).props("dense").classes("mt-1 w-full bg-blue-500 text-white")
+        # scroll to prediction form anchor
+        try:
+            ui.run_javascript("document.getElementById('prediction_anchor').scrollIntoView({behavior: 'smooth'});")
+        except Exception:
+            pass
