@@ -47,7 +47,7 @@ def get_login_url() -> str:
 
 async def exchange_code_for_user(code: str) -> dict:
     """
-    Given the OAuth code from 42's callback,
+    Given the OAuth code from 42's callbackgit,
     fetch and return the user's 42 profile dict.
     """
     async with httpx.AsyncClient() as client:

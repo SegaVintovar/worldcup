@@ -13,7 +13,7 @@ DEV_MODE = os.environ.get("DEV_MODE", "false").lower() == "true"
 def login_page():
     ui.query('.nicegui-content').style('background-color: #F5EAD8')
     with ui.column().classes("items-center justify-center min-h-screen w-full"):
-        ui.label("⚽ Football Predictor").classes("text-4xl font-bold mb-2")
+        ui.label("SideQuest ⚽ Predictions").classes("text-4xl font-bold mb-2")
         ui.label("Predict match scores. Climb the leaderboard.").classes("text-gray-500 mb-8")
 
         if DEV_MODE:
