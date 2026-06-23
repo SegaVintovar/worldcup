@@ -59,6 +59,8 @@ async def exchange_code_for_user(code: str) -> dict:
             "code":          code,
             "redirect_uri":  OAUTH_REDIRECT_URI,
         })
+        if token_resp.status_code != 200:
+            print(f"42 token exchange failed: {token_resp.status_code} {token_resp.text}", flush=True)
         token_resp.raise_for_status()
         access_token = token_resp.json()["access_token"]
 
