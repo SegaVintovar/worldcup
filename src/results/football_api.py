@@ -72,9 +72,10 @@ def _normalize_openfootball(raw: list[dict]) -> list[dict]:
 
         stage = m.get("round", "")
         phase = "Group Phase" if stage.lower().startswith("matchday") else "Knockout Phase"
-
+        kickoff = _parse_kickoff(date, time)
         matches.append({
-            "source_id":    f"{home}_vs_{away}_{date}".replace(" ", "_").lower(),
+            "source_id": kickoff.strftime("%Y%m%dT%H%MZ") if kickoff else f"unknown_{date}",
+            # "source_id":    f"{home}_vs_{away}_{date}".replace(" ", "_").lower(),
             "home_team":    home,
             "away_team":    away,
             "kickoff_time": _parse_kickoff(date, time),
@@ -104,6 +105,9 @@ def sync_matches_to_db(db) -> None:
         winner = _compute_winner(m["home_team"], m["away_team"], m["home_score"], m["away_score"])
 
         if existing:
+            existing.home_team = m["home_team"]
+            existing.away_team = m["away_team"]
+            existing.stage = m["stage"]
             if m["finished"]:
                 existing.home_score = m["home_score"]
                 existing.away_score = m["away_score"]
@@ -164,4 +168,8 @@ def update_matches(db) -> None:
     db.commit()
     logger.info(f"Updated {updated_count} matches.")
 
-    
+
+if __name__ == "__main__":
+    for m in get_worldcup_matches():
+        # if m["stage"] == 
+        print(m)
