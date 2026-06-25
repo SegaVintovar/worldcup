@@ -1,7 +1,68 @@
+# from nicegui import ui, app
+# from pathlib import Path
+# from zoneinfo import ZoneInfo
+# from src.services import state
+
+# ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
+# app.add_static_files("/assets", str(ASSETS_DIR))
+
+# AMSTERDAM = ZoneInfo("Europe/Amsterdam")
+
+
+# def header(active_path: str = "") -> None:
+#     css = 'text-black'
+#     # css_p = 'bg-green-600'
+#     css_predict = css if active_path == "/predict" else ""
+#     css_leaderboard = css if active_path == "/leaderboard" else ""
+#     css_dashboard = css if active_path == "/dashboard" else ""
+
+#     with ui.header().classes('items-center'):
+
+#         with ui.row().classes('items-center w-full'):
+
+#             # ── LEFT SIDE (logo + buttons)
+#             with ui.row().classes('items-center'):
+#                 with ui.element('div').classes('w-12 h-12 rounded-full overflow-hidden bg-transparent'):
+#                     ui.image('/assets/sidequest_logo.png').classes('w-full h-full object-cover')
+
+#                 with ui.button_group():
+#                     ui.button(
+#                         "Dashboard",
+#                         on_click=lambda: ui.navigate.to('/dashboard', new_tab=False)
+#                     ).classes(css_dashboard)
+
+#                     ui.button(
+#                         "Leaderboard",
+#                         on_click=lambda: ui.navigate.to('/leaderboard', new_tab=False)
+#                     ).classes(css_leaderboard)
+
+#                     ui.button(
+#                         "Make Prediction",
+#                         on_click=lambda: ui.navigate.to('/predict', new_tab=False)
+#                     ).classes(css_predict).props("color=positive")
+
+#             # pushes everything to the right
+#             ui.space()
+#             ui.button(
+#                 "Logout",
+#                 on_click=lambda: ui.navigate.to("/logout")
+#             ).classes("ml-auto")
+#             # ── RIGHT SIDE (last sync)
+#             if state.LAST_SYNC:
+#                 ui.label(
+#                     f"🕒 Updated {state.LAST_SYNC.astimezone(AMSTERDAM).strftime('%d %b %H:%M')}"
+#                 ).classes('text-xs text-gray-200')
+#             else:
+#                 ui.label(
+#                     "🕒 Updated None"
+#                 ).classes('text-xs text-gray-200')
+
+
 from nicegui import ui, app
 from pathlib import Path
 from zoneinfo import ZoneInfo
 from src.services import state
+from src.assets import theme
 
 ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
 app.add_static_files("/assets", str(ASSETS_DIR))
@@ -10,49 +71,50 @@ AMSTERDAM = ZoneInfo("Europe/Amsterdam")
 
 
 def header(active_path: str = "") -> None:
-    css = 'text-black'
-    # css_p = 'bg-green-600'
-    css_predict = css if active_path == "/predict" else ""
-    css_leaderboard = css if active_path == "/leaderboard" else ""
-    css_dashboard = css if active_path == "/dashboard" else ""
+    css_predict = "sq-btn-active" if active_path == "/predict" else "sq-btn-ghost"
+    css_leaderboard = "sq-btn-active" if active_path == "/leaderboard" else "sq-btn-ghost"
+    css_dashboard = "sq-btn-active" if active_path == "/dashboard" else "sq-btn-ghost"
 
-    with ui.header().classes('items-center'):
+    with ui.header().classes('items-center').style(f'background-color: {theme.BG}; color: {theme.INK};'):
 
         with ui.row().classes('items-center w-full'):
 
             # ── LEFT SIDE (logo + buttons)
-            with ui.row().classes('items-center'):
-                with ui.element('div').classes('w-12 h-12 rounded-full overflow-hidden bg-transparent'):
+            with ui.row().classes('items-center gap-3'):
+                with ui.element('div').classes('w-10 h-10 rounded-full overflow-hidden bg-transparent') \
+                        .style(f'border: 2px solid {theme.INK};'):
                     ui.image('/assets/sidequest_logo.png').classes('w-full h-full object-cover')
 
-                with ui.button_group():
+                with ui.row().classes('items-center gap-1'):
                     ui.button(
                         "Dashboard",
                         on_click=lambda: ui.navigate.to('/dashboard', new_tab=False)
-                    ).classes(css_dashboard)
+                    ).props('unelevated').classes(css_dashboard)
 
                     ui.button(
                         "Leaderboard",
                         on_click=lambda: ui.navigate.to('/leaderboard', new_tab=False)
-                    ).classes(css_leaderboard)
+                    ).props('unelevated').classes(css_leaderboard)
 
                     ui.button(
                         "Make Prediction",
                         on_click=lambda: ui.navigate.to('/predict', new_tab=False)
-                    ).classes(css_predict).props("color=positive")
+                    ).props('unelevated').classes(
+                        "sq-btn-active" if active_path == "/predict" else "sq-btn-primary"
+                    )
 
             # pushes everything to the right
             ui.space()
             ui.button(
                 "Logout",
                 on_click=lambda: ui.navigate.to("/logout")
-            ).classes("ml-auto")
+            ).props('unelevated outline').classes("sq-btn-ghost ml-auto")
             # ── RIGHT SIDE (last sync)
             if state.LAST_SYNC:
                 ui.label(
                     f"🕒 Updated {state.LAST_SYNC.astimezone(AMSTERDAM).strftime('%d %b %H:%M')}"
-                ).classes('text-xs text-gray-200')
+                ).classes('text-xs').style(f'color: {theme.INK_MUTED};')
             else:
                 ui.label(
                     "🕒 Updated None"
-                ).classes('text-xs text-gray-200')
+                ).classes('text-xs').style(f'color: {theme.INK_MUTED};')
