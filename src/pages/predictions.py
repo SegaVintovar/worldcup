@@ -33,8 +33,8 @@ from src.assets import theme
 
 def predictions_page(current_user: User):
     header("/predict")
-
-    ui.query('.nicegui-content').style('background-color: #F5EAD8')
+    ui.query('.nicegui-content').style(f'background-color: {theme.BG}')
+    # ui.query('.nicegui-content').style('background-color: #F5EAD8')
     with ui.row().classes("w-full gap-4 items-stretch"):
         ui.add_css('''
         .q-message-avatar {
