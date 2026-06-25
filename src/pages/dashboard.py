@@ -21,10 +21,12 @@ def dashboard_page(user: User):
             border: 2px solid #444 !important;
         }
     ''')
-    ui.query('.nicegui-content').style('background-color: #F5EAD8')
+    # ui.query('.nicegui-content').style('background-color: #F5EAD8')
+    ui.query('.nicegui-content').style(f'background-color: {theme.BG}')
     with ui.column().style('width: 100%'):
         with ui.element('div').classes('p-2').style('width: 100%'):
-            ui.label("Dashboard").classes("text-3xl font-bold mb-6")
+            ui.label("Dashboard").classes("text-3xl font-bold mb-6").style(f'color: {theme.INK}; font-weight: 600;')
+            # ui.label("Dashboard").classes("text-3xl font-bold mb-6")
 
             with ui.card():
                 ui.chat_message(('Welcome to the SideQuest Football Prediction app!\n',
