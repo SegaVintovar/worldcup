@@ -33,13 +33,7 @@ from src.assets import theme
 def leaderboard_page():
     header("/leaderboard")
     ui.query('.nicegui-content').style(f'background-color: {theme.BG}')
-    ui.chat_message(('Here is our leaderboard\n',
-                     'Because now we are in testing mode, the leaderboard will'
-                     ' be reseted on 21st of June\n'
-                     'I hope we will be able to provide prizes for top - 3 places'),
-                    name='sq.clubs.codam',
-                    stamp='now',
-                    avatar='https://robohash.org/ui')
+    
     css1 = ".leaderboard-row { transition: background-color 0.15s ease; cursor: default; }"
     css2 = ".leaderboard-row:hover { background-color: #F0E6D2; }"
     css3 = f".leaderboard-row.top-1 {{ border-left: 4px solid {theme.GOLD} !important; }}"
@@ -60,7 +54,7 @@ def leaderboard_page():
                         'I hope we will be able to provide prizes for top - 3 places'),
                         name='sq.clubs.codam',
                         stamp='now',
-                        avatar='https://robohash.org/ui')
+                        avatar='/src/assets/owl_prediction_mascot.png')
 
     rankings = calculate_rankings()
     if not rankings:
