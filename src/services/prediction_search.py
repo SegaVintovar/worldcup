@@ -7,7 +7,9 @@ from src.services.database import SessionLocal, Match, Prediction, User
 
 AMSTERDAM = ZoneInfo("Europe/Amsterdam")
 
-PREDICTION_LIMITS = True  # False = allow late predictions (debug/admin mode)
+from src.services.state import PREDICTION_LIMITS, KO_ONLY
+
+ # False = allow late predictions (debug/admin mode)
 
 
 def get_matches_without_predictions(current_user: User, matches: list[Match]) -> list[Match]:
@@ -18,6 +20,9 @@ def get_matches_without_predictions(current_user: User, matches: list[Match]) ->
         available: list[Match] = []
 
         for match in matches:
+
+            if KO_ONLY and match.phase != "Knockout Phase":
+                continue
 
             # Production mode: no predictions after kickoff
             if PREDICTION_LIMITS:
