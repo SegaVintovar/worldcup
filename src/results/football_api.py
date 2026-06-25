@@ -8,6 +8,7 @@ import requests
 import logging
 from datetime import datetime, timezone, timedelta
 
+
 logger = logging.getLogger(__name__)
 
 OPENFOOTBALL_URL = (
@@ -86,6 +87,9 @@ def _normalize_openfootball(raw: list[dict]) -> list[dict]:
         })
     return matches
 
+def teams_known(home_team: str, away_team: str) -> bool:
+    return not any(char.isdigit() for char in home_team + away_team)
+
 # ── Public ─────────────────────────────────────────────────────────────────────
 
 def get_worldcup_matches() -> list[dict]:
@@ -104,12 +108,20 @@ def sync_matches_to_db(db) -> None:
         winner = _compute_winner(m["home_team"], m["away_team"], m["home_score"], m["away_score"])
 
         if existing:
+            if (
+                not teams_known(existing.home_team, existing.away_team)
+                and teams_known(m["home_team"], m["away_team"])
+                ):
+                existing.home_team = m["home_team"]
+                existing.away_team = m["away_team"]
+                updated_count += 1
             if m["finished"]:
                 existing.home_score = m["home_score"]
                 existing.away_score = m["away_score"]
                 existing.played = True
                 existing.winner = winner
                 updated_count += 1
+            
         else:
             db.add(Match(
                 source_id  = m["source_id"],
