@@ -23,26 +23,22 @@ from src.services.prediction_components import (
 # false = no prediction limits (debug mode)
 from src.services.prediction_search import PREDICTION_LIMITS
 from datetime import datetime
+from src.assets import theme
 
 
 def predictions_page(current_user: User):
     header("/predict")
 
-    ui.query('.nicegui-content').style('background-color: #F5EAD8')
-    with ui.row().classes("w-full gap-4 items-stretch"):
-        with ui.card():
-            ui.chat_message((
-                'On this page you can make your prediction\n',
-                'Find the match with our search bar or pick one from next 9 avaliable matches.',
-                'Current app status: Testing period in ON till 21st June',
-                'On 21st the leaderboard will be nullified, so real challenge will start with KickOff Stage'),
-                            name='sq.clubs.codam',
-                            stamp='now',
-                            avatar='https://robohash.org/ui').classes('flex')
-
-        with ui.card().classes("flex-1 p-3"):
-            build_rules_card()
-
+    ui.query('.nicegui-content').style(f'background-color: {theme.BG}')
+    ui.chat_message(('On this page you can make your prediction\n',
+                        'Find the match with our search bar or pick one from next 9 avaliable matches.',
+                        'Current app status: Testing period in ON till 26th June',
+                        'On 21st the leaderboard will be nullified, so real challenge will start with KickOff Stage'),
+                    name='sq.clubs.codam',
+                    stamp='now',
+                    avatar='https://robohash.org/ui')
+    with ui.card().classes("flex-1 p-3"):
+        build_rules_card()
     upcoming, finished = get_split_matches()
 
     if PREDICTION_LIMITS:
@@ -219,19 +215,19 @@ def select_match(match: Match, current_user: User, container, pred_ref=None):
 
     with container:
         with ui.row().classes("w-full items-center justify-between"):
-            ui.label(f"{match.home_team} vs {match.away_team}").classes("text-sm font-bold")
+            ui.label(f"{match.home_team} vs {match.away_team}").classes("text-sm").style(f"color: {theme.INK}; font-weight: 600;")
             ui.label(
                 match.match_date.astimezone(AMSTERDAM).strftime("%d %b %H:%M")
-            ).classes("text-xs text-gray-400")
+            ).classes("text-xs").style(f"color: {theme.INK_MUTED};")
 
         selected_winner = {"value": None}
 
         with ui.row().classes("items-center justify-center w-full gap-3 mt-1"):
-            ui.label(match.home_team).classes("text-xs text-gray-500 text-right w-24")
+            ui.label(match.home_team).classes("text-xs text-right w-24").style(f"color: {theme.INK_MUTED};")
             home_num = ui.number(min=0, max=10, value=0).classes("w-16 text-center")
-            ui.label("–").classes("text-sm font-bold")
+            ui.label("–").classes("text-sm").style(f"color: {theme.INK}; font-weight: 600;")
             away_num = ui.number(min=0, max=10, value=0).classes("w-16 text-center")
-            ui.label(match.away_team).classes("text-xs text-gray-500 text-left w-24")
+            ui.label(match.away_team).classes("text-xs text-left w-24").style(f"color: {theme.INK_MUTED};")
 
         winner_container = ui.row().classes("w-full items-center justify-center gap-2 mt-1")
 
@@ -241,7 +237,7 @@ def select_match(match: Match, current_user: User, container, pred_ref=None):
                 selected_winner["value"] = None
                 return
             with winner_container:
-                ui.label("Winner:").classes("text-xs text-gray-500")
+                ui.label("Winner:").classes("text-xs").style(f"color: {theme.INK_MUTED};")
                 home_btn = ui.button(match.home_team).props("dense flat")
                 away_btn = ui.button(match.away_team).props("dense flat")
 
