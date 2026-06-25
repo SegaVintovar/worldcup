@@ -5,6 +5,8 @@ from src.services.match_calender import build_match_calendar
 from src.services.login_info import login_info
 from src.services.database import User
 from src.services.header import header
+from src.assets import theme
+
 
 ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
 app.add_static_files("/assets", str(ASSETS_DIR))

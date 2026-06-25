@@ -28,6 +28,7 @@ from pathlib import Path
 ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
 app.add_static_files("/assets", str(ASSETS_DIR))
 
+from src.assets import theme
 
 
 def predictions_page(current_user: User):
@@ -229,19 +230,19 @@ def select_match(match: Match, current_user: User, container, pred_ref=None):
 
     with container:
         with ui.row().classes("w-full items-center justify-between"):
-            ui.label(f"{match.home_team} vs {match.away_team}").classes("text-sm font-bold")
+            ui.label(f"{match.home_team} vs {match.away_team}").classes("text-sm").style(f"color: {theme.INK}; font-weight: 600;")
             ui.label(
                 match.match_date.astimezone(AMSTERDAM).strftime("%d %b %H:%M")
-            ).classes("text-xs text-gray-400")
+            ).classes("text-xs").style(f"color: {theme.INK_MUTED};")
 
         selected_winner = {"value": None}
 
         with ui.row().classes("items-center justify-center w-full gap-3 mt-1"):
-            ui.label(match.home_team).classes("text-xs text-gray-500 text-right w-24")
+            ui.label(match.home_team).classes("text-xs text-right w-24").style(f"color: {theme.INK_MUTED};")
             home_num = ui.number(min=0, max=10, value=0).classes("w-16 text-center")
-            ui.label("–").classes("text-sm font-bold")
+            ui.label("–").classes("text-sm").style(f"color: {theme.INK}; font-weight: 600;")
             away_num = ui.number(min=0, max=10, value=0).classes("w-16 text-center")
-            ui.label(match.away_team).classes("text-xs text-gray-500 text-left w-24")
+            ui.label(match.away_team).classes("text-xs text-left w-24").style(f"color: {theme.INK_MUTED};")
 
         winner_container = ui.row().classes("w-full items-center justify-center gap-2 mt-1")
 
@@ -251,7 +252,7 @@ def select_match(match: Match, current_user: User, container, pred_ref=None):
                 selected_winner["value"] = None
                 return
             with winner_container:
-                ui.label("Winner:").classes("text-xs text-gray-500")
+                ui.label("Winner:").classes("text-xs").style(f"color: {theme.INK_MUTED};")
                 home_btn = ui.button(match.home_team).props("dense flat")
                 away_btn = ui.button(match.away_team).props("dense flat")
 

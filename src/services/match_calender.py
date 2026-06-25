@@ -1,9 +1,14 @@
 from src.services.database import SessionLocal, Match
 
+from src.services.prediction_search import teams_confirmed
+
+
 from nicegui import ui
 
 from zoneinfo import ZoneInfo
 AMSTERDAM = ZoneInfo("Europe/Amsterdam")
+
+from src.services.state import KO_ONLY, CONFIRMED_ONLY
 
 def build_match_calendar():
     upcoming, finished = get_split_matches()
@@ -63,19 +68,48 @@ def get_split_matches() -> tuple[list[Match], list[Match]]:
     db = SessionLocal()
 
     try:
-        upcoming_matches: list[Match] = (
+        upcoming_query = (
             db.query(Match)
             .filter(Match.played == False)
+        )
+
+        finished_query = (
+            db.query(Match)
+            .filter(Match.played == True)
+        )
+
+        if KO_ONLY:
+            upcoming_query = upcoming_query.filter(
+                Match.phase == "Knockout Phase"
+            )
+
+            finished_query = finished_query.filter(
+                Match.phase == "Knockout Phase"
+            )
+        
+
+        upcoming_matches: list[Match] = (
+            upcoming_query
             .order_by(Match.match_date)
             .all()
         )
 
         finished_matches: list[Match] = (
-            db.query(Match)
-            .filter(Match.played == True)
+            finished_query
             .order_by(Match.match_date.desc())
             .all()
         )
+
+        if CONFIRMED_ONLY:
+            upcoming_matches = [
+                m for m in upcoming_matches
+                if teams_confirmed(m)
+            ]
+
+            finished_matches = [
+                m for m in finished_matches
+                if teams_confirmed(m)
+            ]
 
         return upcoming_matches, finished_matches
 

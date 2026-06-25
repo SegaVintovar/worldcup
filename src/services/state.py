@@ -9,3 +9,6 @@ PREDICTION_LIMITS = True
 
 # only show knockout phase matches
 KO_ONLY = True
+
+# only show matches of teams where both countries are decided
+CONFIRMED_ONLY = False

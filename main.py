@@ -23,7 +23,7 @@ from src.services import state
 from src.assets.style import apply_global_styles
 
 
-apply_global_styles()
+
 
 # outsourced
 from src.results.football_api import sync_matches_to_db, update_matches
@@ -154,6 +154,7 @@ def get_current_user() -> User | None:
 
 @ui.page("/dashboard")
 def dashboard():
+    apply_global_styles()
     user = get_current_user()
     if not user:
         ui.navigate.to("/")
@@ -163,6 +164,7 @@ def dashboard():
 
 @ui.page("/")
 def index():
+    apply_global_styles()
     user = get_current_user()
     if user:
         ui.navigate.to("/dashboard")
@@ -172,6 +174,7 @@ def index():
 
 @ui.page("/predict")
 def predict():
+    apply_global_styles()
     user = get_current_user()
     if not user:
         ui.navigate.to("/")
@@ -181,6 +184,7 @@ def predict():
 
 @ui.page("/leaderboard")
 def leaderboard():
+    apply_global_styles()
     user = get_current_user()
     if not user:
         ui.navigate.to("/")
