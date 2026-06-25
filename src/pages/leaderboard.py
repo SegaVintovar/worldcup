@@ -1,34 +1,12 @@
 """Leaderboard page — shows ranked users by total points."""
-from nicegui import ui
+from nicegui import ui, app
 from src.services.scoring import calculate_rankings
 from src.services.header import header
+from pathlib import Path
 from src.assets import theme
 
-
-# def leaderboard_page():
-#     header("/leaderboard")
-#     ui.query('.nicegui-content').style('background-color: #F5EAD8')
-#     ui.label("🏆 Leaderboard").classes("text-3xl font-bold mb-6")
-
-#     rankings = calculate_rankings()
-#     if not rankings:
-#         ui.label("No scores yet — predictions will appear here after matches are played.").classes("text-gray-400")
-#         return
-
-#     medals = ["🥇", "🥈", "🥉"]
-#     for i, entry in enumerate(rankings):
-#         medal = medals[i] if i < 3 else f"#{i+1}"
-#         with ui.card().classes('w-full hover:bg-amber-50 transition-colors duration-150'):
-#             with ui.row().classes("items-center gap-4 mb-3 w-full flex-nowrap"):
-#                 with ui.column().style("flex: 0 0 10%"):
-#                     ui.label(medal).classes("text-2xl w-8")
-#                 with ui.column().style("flex: 0 0 20%").classes("items-center gap-2"):
-#                     if entry["avatar_url"]:
-#                         ui.image(entry["avatar_url"]).classes("w-10 h-10 rounded-full")
-#                     ui.label(entry["login"]).classes("flex-1 font-medium")
-#                 with ui.column().style("flex: 0 0 70%").classes("items-right"):
-#                     ui.label(f"{entry['p_score']} pts").classes("font-bold text-blue-600")
-
+ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
+app.add_static_files("/assets", str(ASSETS_DIR))
 
 def leaderboard_page():
     header("/leaderboard")
@@ -46,15 +24,19 @@ def leaderboard_page():
     ui.label("🏆 Leaderboard").classes("text-3xl mb-6").style(f'color: {theme.INK}; font-weight: 600;')
 
 
-
+    ui.label("🏆 Leaderboard").classes("text-3xl font-bold mb-6")
+    ui.add_css('''
+        .q-message-avatar {
+            width: 64px !important;
+            height: 64px !important;
+            border: 2px solid #444 !important;
+        }
+    ''')
     with ui.card():
-        ui.chat_message(('Here is our leaderboard\n',
-                        'Because now we are in testing mode, the leaderboard will'
-                        ' be reseted on 21st of June\n'
-                        'I hope we will be able to provide prizes for top - 3 places'),
-                        name='sq.clubs.codam',
-                        stamp='now',
-                        avatar='/src/assets/owl_prediction_mascot.png')
+        ui.chat_message(('Checkout our leaderboard!\n',
+                        '#1 Will get a prize...'),
+                        name='SQoot',
+                        avatar='/assets/owl_prediction_mascot.png')
 
     rankings = calculate_rankings()
     if not rankings:

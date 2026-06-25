@@ -7,8 +7,11 @@ from src.services.database import SessionLocal, Match, Prediction, User
 
 AMSTERDAM = ZoneInfo("Europe/Amsterdam")
 
-PREDICTION_LIMITS = True  # False = allow late predictions (debug/admin mode)
+from src.services.state import PREDICTION_LIMITS, KO_ONLY, CONFIRMED_ONLY
 
+
+def teams_confirmed(match: Match) -> bool:
+    return not any(char.isdigit() for char in match.home_team + match.away_team)
 
 def get_matches_without_predictions(current_user: User, matches: list[Match]) -> list[Match]:
     db = SessionLocal()
@@ -18,6 +21,12 @@ def get_matches_without_predictions(current_user: User, matches: list[Match]) ->
         available: list[Match] = []
 
         for match in matches:
+
+            if CONFIRMED_ONLY and not teams_confirmed(match):
+                continue
+
+            if KO_ONLY and match.phase != "Knockout Phase":
+                continue
 
             # Production mode: no predictions after kickoff
             if PREDICTION_LIMITS:
@@ -50,15 +59,33 @@ def get_matches_without_predictions(current_user: User, matches: list[Match]) ->
 def get_finished_matches_with_predictions(current_user: User) -> list[tuple[Match, Prediction | None]]:
     """All finished matches, with the user's prediction if they made one (else None)."""
     db = SessionLocal()
+
     try:
-        matches = (
+        query = (
             db.query(Match)
             .filter(Match.played == True)
+        )
+
+        if KO_ONLY:
+            query = query.filter(
+                Match.phase == "Knockout Phase"
+            )
+
+        matches = (
+            query
             .order_by(Match.match_date.desc())
             .limit(5)
             .all()
         )
+
+        if CONFIRMED_ONLY:
+            matches = [
+                match for match in matches
+                if teams_confirmed(match)
+            ]
+
         result = []
+
         for match in matches:
             prediction = (
                 db.query(Prediction)
@@ -68,8 +95,11 @@ def get_finished_matches_with_predictions(current_user: User) -> list[tuple[Matc
                 )
                 .first()
             )
+
             result.append((match, prediction))
+
         return result
+
     finally:
         db.close()
 

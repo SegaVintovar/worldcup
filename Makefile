@@ -19,7 +19,7 @@ show-users:
 	$(PSQL) -c "SELECT * FROM users LIMIT 20;"
 
 show-matches:
-	$(PSQL) -c "SELECT * FROM matches ORDER BY match_date LIMIT 20;"
+	$(PSQL) -c "SELECT * FROM matches ORDER BY match_date"
 
 show-predictions:
 	$(PSQL) -c "SELECT * FROM predictions LIMIT 20;"

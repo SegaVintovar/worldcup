@@ -1,6 +1,6 @@
 """Predictions page — logged-in users submit score predictions."""
 
-from nicegui import ui
+from nicegui import ui, app
 from src.services.database import Match, User
 from src.services.header import header
 from src.services.match_calender import get_split_matches
@@ -21,24 +21,39 @@ from src.services.prediction_components import (
 )
 
 # false = no prediction limits (debug mode)
-from src.services.prediction_search import PREDICTION_LIMITS
+from src.services.state import PREDICTION_LIMITS
 from datetime import datetime
+from pathlib import Path
+
+ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
+app.add_static_files("/assets", str(ASSETS_DIR))
+
 from src.assets import theme
 
 
 def predictions_page(current_user: User):
     header("/predict")
-
     ui.query('.nicegui-content').style(f'background-color: {theme.BG}')
-    ui.chat_message(('On this page you can make your prediction\n',
-                        'Find the match with our search bar or pick one from next 9 avaliable matches.',
-                        'Current app status: Testing period in ON till 26th June',
-                        'On 21st the leaderboard will be nullified, so real challenge will start with KickOff Stage'),
-                    name='sq.clubs.codam',
-                    stamp='now',
-                    avatar='https://robohash.org/ui')
-    with ui.card().classes("flex-1 p-3"):
-        build_rules_card()
+    # ui.query('.nicegui-content').style('background-color: #F5EAD8')
+    with ui.row().classes("w-full gap-4 items-stretch"):
+        ui.add_css('''
+        .q-message-avatar {
+            width: 64px !important;
+            height: 64px !important;
+            border: 2px solid #444 !important;
+        }
+        ''')
+        with ui.card():
+            ui.chat_message((
+                'On this page you can make your prediction\n',
+                'Find the match with our search bar or pick one from next 9 avaliable matches.',
+                'You can always delete predictions before kickoff time.'),
+                name='SQoot',
+                avatar='/assets/owl_prediction_mascot.png').classes('flex')
+
+        with ui.card().classes("flex-1 p-3"):
+            build_rules_card()
+
     upcoming, finished = get_split_matches()
 
     if PREDICTION_LIMITS:

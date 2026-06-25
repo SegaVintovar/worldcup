@@ -1,5 +1,6 @@
 """Leaderboard page — shows ranked users by total points."""
-from nicegui import ui
+from nicegui import ui, app
+from pathlib import Path
 from src.services.match_calender import build_match_calendar
 from src.services.login_info import login_info
 from src.services.database import User
@@ -7,19 +8,32 @@ from src.services.header import header
 from src.assets import theme
 
 
+ASSETS_DIR = Path(__file__).resolve().parents[1] / "assets"
+app.add_static_files("/assets", str(ASSETS_DIR))
+
 
 def dashboard_page(user: User):
     header("/dashboard")
+    ui.add_css('''
+        .q-message-avatar {
+            width: 64px !important;
+            height: 64px !important;
+            border: 2px solid #444 !important;
+        }
+    ''')
+    # ui.query('.nicegui-content').style('background-color: #F5EAD8')
     ui.query('.nicegui-content').style(f'background-color: {theme.BG}')
     with ui.column().style('width: 100%'):
         with ui.element('div').classes('p-2').style('width: 100%'):
             ui.label("Dashboard").classes("text-3xl font-bold mb-6").style(f'color: {theme.INK}; font-weight: 600;')
-            ui.chat_message(('Welcome in Football Predictor app!\n',
-                            'On this page you can check your prediction results',
-                            'Current app status: Testing period in ON till 21st June',
-                            'On 21st the leaderboard will be nullified, so real challenge will start with KickOff Stage'),
-                    name='sq.clubs.codam',
-                    stamp='now',
-                    avatar='https://robohash.org/ui')
+            # ui.label("Dashboard").classes("text-3xl font-bold mb-6")
+
+            with ui.card():
+                ui.chat_message(('Welcome to the SideQuest Football Prediction app!\n',
+                                'On this page you can check your prediction results.',
+                                'Make your predictions for World Cup Knockout-stage!',
+                                'Don\'t forget to check your position on the leaderboard.'),
+                        name='SQoot',
+                        avatar='/assets/owl_prediction_mascot.png')
         login_info(user)
         build_match_calendar()
