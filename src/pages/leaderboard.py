@@ -23,8 +23,6 @@ def leaderboard_page():
 
     ui.label("🏆 Leaderboard").classes("text-3xl mb-6").style(f'color: {theme.INK}; font-weight: 600;')
 
-
-    ui.label("🏆 Leaderboard").classes("text-3xl font-bold mb-6")
     ui.add_css('''
         .q-message-avatar {
             width: 64px !important;

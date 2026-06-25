@@ -11,4 +11,4 @@ PREDICTION_LIMITS = True
 KO_ONLY = True
 
 # only show matches of teams where both countries are decided
-CONFIRMED_ONLY = False
+CONFIRMED_ONLY = True

@@ -47,11 +47,11 @@ def daily_sync() -> None:
     global LAST_SYNC
     db = SessionLocal()
     try:
-        match_count = db.query(Match).count()
-        if match_count == 0:
-            sync_matches_to_db(db)
-        else:
-            update_matches(db)
+        # match_count = db.query(Match).count()
+        # if match_count == 0:
+        sync_matches_to_db(db)
+        # else:
+        #     # update_matches(db)
         print("sync and update was done", flush=True)
     finally:
         db.close()
@@ -71,11 +71,11 @@ async def startup():
     init_db()
     db = SessionLocal()
     try:
-        match_count = db.query(Match).count()
-        if match_count == 0:
-            sync_matches_to_db(db)
-        else:
-            update_matches(db)
+        # match_count = db.query(Match).count()
+        # if match_count == 0:
+        sync_matches_to_db(db)
+        # else:
+        #     # update_matches(db)
     except Exception as e:
         import traceback
         traceback.print_exc()
