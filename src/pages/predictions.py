@@ -73,6 +73,7 @@ def predictions_page(current_user: User):
         # if something goes wrong with timezones or match_date, fall back to original list
         pass
 
+<<<<<<< HEAD
     pred_ref = {
         "container": None,
         "selected_match": None,
@@ -80,6 +81,15 @@ def predictions_page(current_user: User):
         "available_card": None,
         "search_results_container": None,
     }
+=======
+   # ── Prediction form + Rules ───────────────────────────────────────────────
+    with ui.row().classes("w-full gap-4 items-stretch"):
+        with ui.card().classes("flex-1 p-4"):
+            prediction_container = ui.column().classes("w-full")
+            pred_ref["container"] = prediction_container
+            with prediction_container:
+                ui.label("Choose a match to predict").classes("text-sm").style(f"color: {theme.INK_MUTED};")
+>>>>>>> 467d733 (design is updated)
 
     def on_search_select(match, container):
         pred_ref["selected_match"] = match
@@ -144,9 +154,15 @@ def predictions_page(current_user: User):
         end = start + page["per_page"]
         subset = pred_available[start:end]
         if not subset:
-            ui.label("No matches available to predict.").classes("text-sm text-gray-400")
+            ui.label("No matches available to predict.").classes(f"color: {theme.INK_MUTED};")
             return
         with matches_container:
+    # with ui.card().classes("w-full p-4"):
+    #     ui.label("📅 Available matches").classes("text-xl mb-2").style(f"color: {theme.INK}; font-weight: 600;")
+
+    #     if not pred_available:
+    #         ui.label("No matches available to predict.").classes("text-sm").style(f"color: {theme.INK_MUTED};")
+    #     else:
             with ui.grid(columns=3).classes("w-full gap-2"):
                 for match in subset:
                     def make_click(m, ref):
