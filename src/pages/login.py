@@ -36,7 +36,7 @@ def login_page():
                 .style(f'border: 3px solid {theme.INK};'):
             ui.image('/assets/sidequest_logo.png').classes('w-full h-full object-cover')
 
-        ui.label("Football Predictor").classes("text-4xl mb-1").style(
+        ui.label("SideQuest Predictions").classes("text-4xl mb-1").style(
             f'color: {theme.INK}; font-weight: 600;'
         )
         ui.label("Predict match scores. Climb the leaderboard.").classes("mb-8").style(
