@@ -94,6 +94,12 @@ def get_worldcup_matches() -> list[dict]:
 
 # ── DB Sync ────────────────────────────────────────────────────────────────────
 
+def _is_placeholder(name: str) -> bool:
+    """Returns True for names like '2F', '1G', 'W73', '3A/B/C', 'L101'"""
+    import re
+    return bool(re.match(r'^[0-9][A-Z]$|^[WL]\d+$|^[0-9][A-Z](/[A-Z])+$', name.strip()))
+
+
 def sync_matches_to_db(db) -> None:
     from src.services.database import Match
 
@@ -105,8 +111,12 @@ def sync_matches_to_db(db) -> None:
         winner = _compute_winner(m["home_team"], m["away_team"], m["home_score"], m["away_score"])
 
         if existing:
-            existing.home_team = m["home_team"]
-            existing.away_team = m["away_team"]
+            if not _is_placeholder(m["home_team"]):
+                existing.home_team = m["home_team"]
+            if not _is_placeholder(m["away_team"]):
+                existing.away_team = m["away_team"]
+            # existing.home_team = m["home_team"]
+            # existing.away_team = m["away_team"]
             existing.stage = m["stage"]
             if m["finished"]:
                 existing.home_score = m["home_score"]
