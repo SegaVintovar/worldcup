@@ -124,7 +124,6 @@ def get_upcoming_predictions(current_user: User) -> list[tuple[Match, Prediction
         return (
             query
             .order_by(Match.match_date.asc())
-            .limit(5)
             .all()
         )
 
