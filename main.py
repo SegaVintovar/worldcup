@@ -18,6 +18,7 @@ from src.services.auth import exchange_code_for_user
 from src.services.header import header
 from src.services.scoring import update_prediction_scores, update_user_scores
 from src.services import state
+from src.services.parsing_football import match_the_data
 
 # assets
 from src.assets.style import apply_global_styles
@@ -50,6 +51,8 @@ def daily_sync() -> None:
         # match_count = db.query(Match).count()
         # if match_count == 0:
         sync_matches_to_db(db)
+        match_the_data(db)
+        
         # else:
         #     # update_matches(db)
         print("sync and update was done", flush=True)
@@ -85,7 +88,7 @@ async def startup():
     update_prediction_scores()
     update_user_scores()
     # sync every 10 min
-    scheduler.add_job(daily_sync, "cron", minute="*/10", timezone="Europe/Amsterdam")
+    scheduler.add_job(daily_sync, "cron", minute="*/1", timezone="Europe/Amsterdam")
     scheduler.start()
 
 
