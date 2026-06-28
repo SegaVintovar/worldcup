@@ -45,28 +45,12 @@ COUNTRY = {
     "Jordan": "Jordan",
     "Portugal": "Portugal",
     "Colombia": "Colombia",
-    "Congo DR": "DR Congo",
+    "DR Congo": "DR Congo",
     "Uzbekistan": "Uzbekistan",
     "England": "England",
     "Croatia": "Croatia",
     "Panama": "Panama",
-    "Ghana": "Ghana",
-
-    # playoff shorthand mappings
-    "3CEFHI": "3C/E/F/H/I",
-    "3AEHIJ": "3A/E/H/I/J",
-    "3BEFIJ": "3B/E/F/I/J",
-    "3CEFGHI": "3C/E/F/G/H/I",
-    "3EFGIJ": "3E/F/G/I/J",
-
-    "1I": "1I",
-    "1L": "1L",
-    "1G": "1G",
-    "2J": "2J",
-    "2K": "2K",
-    "2L": "2L",
-    "2I": "2I",
-    "2G": "2G"
+    "Ghana": "Ghana"
 }
 
 URLS = ["https://api.foxsports.com/bifrost/v1/soccer/league/schedule-segment/2026-20260628?groupId=12&apikey=jE7yBJVRNAwdDesMgTzTXUUSx1It41Fq",
@@ -102,11 +86,19 @@ def getting_data() -> list[tuple]:
 
 
 def match_the_data(db):
+    def verifier(word: str):
+        if (word not in COUNTRY.keys() and
+                word not in COUNTRY.values()):
+            return word
+
+        return COUNTRY[word]
+
     matches: list[Match]
     current_data = getting_data()
     for h, a, t in current_data:
         matches = db.query(Match).filter(Match.match_date == t).all()
         for m in matches:
-            if (m.home_team.lower().strip() != COUNTRY[h].lower().strip() or
-                m.away_team.lower().strip() != COUNTRY[a].lower().strip()):
+            if (m.home_team.lower().strip() != verifier(h).lower().strip() or
+                m.away_team.lower().strip() != verifier(a).lower().strip()):
                 print(f"{m.home_team} vs {m.away_team} -> {h} vs {a}")
+    print("Matches synchronized.")
