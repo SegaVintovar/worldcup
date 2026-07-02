@@ -63,7 +63,15 @@ def _normalize_openfootball(raw: list[dict]) -> list[dict]:
 
         if score:
             try:
-                ft = score.get("ft", [None, None])
+                if score.get("pt"):
+                    ft = score.get("pt")
+                elif score.get("et"):
+                    ft = score.get("et")
+                # if pt is than that is the result
+                # if et is than that is 
+                else:
+                    ft = score.get("ft", [None, None])
+                # ft = score.get("ft", [None, None])
                 home_score = int(ft[0])
                 away_score = int(ft[1])
                 finished = True
