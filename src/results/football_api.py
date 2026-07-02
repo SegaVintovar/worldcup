@@ -40,7 +40,9 @@ def _parse_kickoff(date_str: str, time_str: str) -> datetime | None:
     except Exception:
         return None
 
-def _compute_winner(home_team, away_team, home_score, away_score):
+def _compute_winner(home_team, away_team, home_score, away_score, penalties):
+    if penalties:
+        home_score, away_score = penalties
     if home_score is None or away_score is None:
         return None
     if home_score > away_score:
@@ -60,12 +62,13 @@ def _normalize_openfootball(raw: list[dict]) -> list[dict]:
         score = m.get("score")
         home_score = away_score = None
         finished = False
+        penalties = None
 
         if score:
             try:
-                if score.get("pt"):
-                    ft = score.get("pt")
-                elif score.get("et"):
+                if score.get("p"):
+                    penalties = score.get("p")
+                if score.get("et"):
                     ft = score.get("et")
                 # if pt is than that is the result
                 # if et is than that is 
@@ -74,6 +77,7 @@ def _normalize_openfootball(raw: list[dict]) -> list[dict]:
                 # ft = score.get("ft", [None, None])
                 home_score = int(ft[0])
                 away_score = int(ft[1])
+                
                 finished = True
             except (TypeError, ValueError, IndexError):
                 pass
@@ -92,6 +96,7 @@ def _normalize_openfootball(raw: list[dict]) -> list[dict]:
             "home_score":   home_score,
             "away_score":   away_score,
             "finished":     finished,
+            "penalties":    penalties
         })
     return matches
 
@@ -116,7 +121,7 @@ def sync_matches_to_db(db) -> None:
 
     for m in matches:
         existing = db.query(Match).filter_by(source_id=m["source_id"]).first()
-        winner = _compute_winner(m["home_team"], m["away_team"], m["home_score"], m["away_score"])
+        winner = _compute_winner(m["home_team"], m["away_team"], m["home_score"], m["away_score"], m["penalties"])
 
         if existing:
             if not _is_placeholder(m["home_team"]):
