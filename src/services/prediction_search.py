@@ -74,7 +74,7 @@ def get_finished_matches_with_predictions(current_user: User) -> list[tuple[Matc
         matches = (
             query
             .order_by(Match.match_date.desc())
-            .limit(5)
+            .limit(10)
             .all()
         )
 
