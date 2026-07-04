@@ -10,15 +10,20 @@ Scoring rules (adjust to your taste):
 from src.services.database import SessionLocal, Prediction, Match, User
 
 
-def score_prediction(predicted_home: int, predicted_away: int, actual_home: int, actual_away: int,
-) -> int:
+def score_prediction(predicted_home: int, predicted_away: int,
+                     pred_winner,
+                     actual_home: int, actual_away: int,
+                     actual_winner) -> int:
+
     # exact score
     if (
-        predicted_home == actual_home
-        and predicted_away == actual_away
-    ):
-        return 3
+        predicted_home == actual_home and predicted_away == actual_away):
 
+        if pred_winner and pred_winner == actual_winner:
+            return 3
+        return 3
+    if pred_winner and pred_winner == actual_winner:
+        return 1
     # correct outcome
     if (
         winner(predicted_home, predicted_away)
@@ -28,7 +33,7 @@ def score_prediction(predicted_home: int, predicted_away: int, actual_home: int,
 
     return 0
 
-
+# bullshit winner, lol
 def winner(home: int, away: int) -> str:
     if home > away:
         return "home"
@@ -53,8 +58,10 @@ def update_prediction_scores() -> None:
                 prediction.points_earned = score_prediction(
                     prediction.pred_home_score,
                     prediction.pred_away_score,
+                    prediction.winner,
                     match.home_score,
                     match.away_score,
+                    match.winner
                 )
 
         db.commit()
