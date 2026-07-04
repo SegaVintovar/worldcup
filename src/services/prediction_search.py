@@ -139,6 +139,11 @@ def save_prediction(
     winner: str | None = None,
 ):
     db = SessionLocal()
+    if not winner:
+        if home_score > away_score:
+            winner = match.home_team
+        if away_score > home_score:
+            winner = match.away_team
     try:
         existing = (
             db.query(Prediction)
