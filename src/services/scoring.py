@@ -16,22 +16,36 @@ def score_prediction(predicted_home: int, predicted_away: int,
                      actual_winner) -> int:
 
     # exact score
-    if (
-        predicted_home == actual_home and predicted_away == actual_away):
+    # if (
+    #     predicted_home == actual_home and predicted_away == actual_away):
 
-        if pred_winner and pred_winner == actual_winner:
-            return 3
+    #     if pred_winner and pred_winner == actual_winner:
+    #         return 3
+    #     return 3
+    # if pred_winner and pred_winner == actual_winner:
+    #     return 1
+    # # correct outcome
+    # if (
+    #     winner(predicted_home, predicted_away)
+    #     == winner(actual_home, actual_away)
+    # ):
+    #     return 1
+
+    # return 0
+    if (
+        predicted_home == actual_home and predicted_away == actual_away and pred_winner and pred_winner == actual_winner
+        ):
         return 3
-    if pred_winner and pred_winner == actual_winner:
+    elif pred_winner and pred_winner == actual_winner:
         return 1
     # correct outcome
-    if (
-        winner(predicted_home, predicted_away)
-        == winner(actual_home, actual_away)
-    ):
-        return 1
-
-    return 0
+    # if (
+    #     winner(predicted_home, predicted_away)
+    #     == winner(actual_home, actual_away)
+    # ):
+    #     return 1
+    else:
+        return 0
 
 # bullshit winner, lol
 def winner(home: int, away: int) -> str:
