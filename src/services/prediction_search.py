@@ -211,6 +211,9 @@ def run_search(home_val, away_val, available, finished, upcoming, container, on_
                         f"Result {m.home_score}–{m.away_score} · "
                         f"Your pick {pick} · {pts} pts"
                     ).classes("text-sm")
+                    if not PREDICTION_LIMITS:
+                        ui.button("Select", on_click=lambda _, match=m: on_select(match, pred_ref["container"])) \
+                                .props("flat dense").classes("text-xs text-green-700")
 
             up_hits = [(m, p) for m, p in upcoming if matches_search(m.home_team, m.away_team)]
             if up_hits:
