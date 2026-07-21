@@ -6,3 +6,4 @@ python-jose==3.3.0
 itsdangerous==2.2.0
 requests>=2.34.2
 apscheduler>=3.11.2,<4.0
+openpyxl

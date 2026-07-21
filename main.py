@@ -12,6 +12,7 @@ from src.pages.predictions import predictions_page
 from src.pages.leaderboard import leaderboard_page
 from src.pages.dashboard import dashboard_page
 from src.pages.admin import admin_page
+from src.pages.pivot import pivot_page
 
 # services
 from src.services.database import init_db, SessionLocal, User, Match, Prediction
@@ -172,6 +173,14 @@ def index():
     else:
         login_page()
 
+@ui.page("/pivot")
+def pivot():
+    apply_global_styles()
+    user = get_current_user()
+    if user:
+        pivot_page()
+    else:
+        login_page()
 
 @ui.page("/admin")
 def admin_p():
